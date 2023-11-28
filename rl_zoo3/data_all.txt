@@ -1,0 +1,279 @@
+Mon Nov 20 12:35:16 2023
+ SAM timestep 100000
+std_reward: 33.10746375064088, mean_reward: 486.562
+std_reward: 58.0091854795428, mean_reward: 321.72
+    std_reward: 53.63499197352415, mean_reward: 461.694
+std_reward: 0.0, mean_reward: 500.0
+std_reward: 63.21912128462401, mean_reward: 450.948
+std_reward: 43.20326260827994, mean_reward: 298.01
+std_reward: 0.0, mean_reward: 500.0
+std_reward: 62.22380604720351, mean_reward: 316.281
+std_reward: 61.53446604139829, mean_reward: 447.317
+std_reward: 45.31759895449007, mean_reward: 348.815
+std_reward: 85.93642140559497, mean_reward: 384.926
+std_reward: 98.91023647226814, mean_reward: 332.011
+std_reward: 97.42859949727287, mean_reward: 330.8
+std_reward: 71.43890754343882, mean_reward: 412.567
+std_reward: 85.50349885238614, mean_reward: 361.178
+Mon Nov 20 14:27:56 2023
+ SAM timestep 110000
+std_reward: 37.23159946873086, mean_reward: 472.251
+std_reward: 20.561475044363913, mean_reward: 169.412
+std_reward: 18.034793899570907, mean_reward: 252.453
+std_reward: 43.97022573287519, mean_reward: 463.557
+std_reward: 26.823977165961054, mean_reward: 429.193
+std_reward: 47.30938917382045, mean_reward: 471.764
+std_reward: 0.0, mean_reward: 500.0
+std_reward: 12.127809983669763, mean_reward: 184.285
+std_reward: 10.66692439271977, mean_reward: 499.418
+std_reward: 12.374491141053035, mean_reward: 168.813
+    std_reward: 18.136691098433584, mean_reward: 57.794
+std_reward: 105.5233621479149, mean_reward: 406.929
+std_reward: 21.64522522405346, mean_reward: 490.965
+std_reward: 52.46748612235963, mean_reward: 235.13
+std_reward: 22.407530787661546, mean_reward: 421.242
+Mon Nov 20 16:26:19 2023
+ SAM timestep 120000
+std_reward: 0.0, mean_reward: 500.0
+std_reward: 21.431953340748013, mean_reward: 494.624
+std_reward: 54.56351322083283, mean_reward: 459.445
+std_reward: 1.6403402086152739, mean_reward: 499.778
+std_reward: 0.0, mean_reward: 500.0
+std_reward: 20.85231344479552, mean_reward: 497.032
+std_reward: 19.537141141937834, mean_reward: 199.546
+std_reward: 0.0, mean_reward: 500.0
+std_reward: 48.180538975814706, mean_reward: 407.892
+std_reward: 86.84736198641845, mean_reward: 420.846
+std_reward: 24.49048133459202, mean_reward: 195.518
+std_reward: 13.40178312762895, mean_reward: 107.203
+std_reward: 21.951610783721545, mean_reward: 401.972
+std_reward: 8.366570384572164, mean_reward: 189.95
+std_reward: 0.0, mean_reward: 500.0
+Mon Nov 20 18:31:06 2023
+ SAM timestep 130000
+std_reward: 0.0, mean_reward: 500.0
+std_reward: 18.746840160411033, mean_reward: 320.228
+std_reward: 0.0, mean_reward: 500.0
+std_reward: 13.514969478322916, mean_reward: 148.56
+std_reward: 0.0, mean_reward: 500.0
+std_reward: 0.0, mean_reward: 500.0
+std_reward: 0.0, mean_reward: 500.0
+std_reward: 0.0, mean_reward: 500.0
+std_reward: 0.0, mean_reward: 500.0
+std_reward: 129.38337596074697, mean_reward: 325.945
+std_reward: 0.0, mean_reward: 500.0
+std_reward: 0.0, mean_reward: 500.0
+std_reward: 45.291779287195155, mean_reward: 368.777
+std_reward: 117.7504258336249, mean_reward: 258.096
+std_reward: 29.392469766931804, mean_reward: 211.189
+Mon Nov 20 20:58:25 2023
+ SAM timestep 140000
+std_reward: 0.0, mean_reward: 500.0
+std_reward: 0.0, mean_reward: 500.0
+std_reward: 27.671622847241903, mean_reward: 376.017
+std_reward: 35.39699759866647, mean_reward: 399.581
+std_reward: 0.0, mean_reward: 500.0
+std_reward: 0.0, mean_reward: 500.0
+std_reward: 0.0, mean_reward: 500.0
+std_reward: 61.342562026703774, mean_reward: 471.078
+std_reward: 45.38727750152018, mean_reward: 482.571
+std_reward: 25.373303115676528, mean_reward: 244.317
+std_reward: 0.0, mean_reward: 500.0
+std_reward: 37.33935591303096, mean_reward: 487.95
+std_reward: 0.0, mean_reward: 500.0
+std_reward: 0.0, mean_reward: 500.0
+std_reward: 0.0, mean_reward: 500.0
+Mon Nov 20 23:35:18 2023
+ SAM timestep 150000
+std_reward: 0.0, mean_reward: 500.0
+std_reward: 0.0, mean_reward: 500.0
+std_reward: 0.0, mean_reward: 500.0
+std_reward: 0.0, mean_reward: 500.0
+std_reward: 0.0, mean_reward: 500.0
+std_reward: 0.0, mean_reward: 500.0
+std_reward: 0.0, mean_reward: 500.0
+std_reward: 11.021498809145697, mean_reward: 496.258
+std_reward: 0.0, mean_reward: 500.0
+std_reward: 104.62711938594123, mean_reward: 462.333
+std_reward: 2.0452479067340463, mean_reward: 499.781
+
+timestep base 60000
+timestep 60000
+Tue Nov 21 09:32:48 2023
+std_reward: 8.529820396702384, mean_reward: 145.142
+std_reward: 27.902380113531535, mean_reward: 85.072
+std_reward: 2.6516530693135554, mean_reward: 111.356
+std_reward: 2.5211852371454184, mean_reward: 96.975
+std_reward: 15.608126601229248, mean_reward: 152.628
+std_reward: 2.1911083953104646, mean_reward: 112.362
+std_reward: 2.9238953469643882, mean_reward: 19.594
+std_reward: 10.523686806438134, mean_reward: 499.504
+std_reward: 3.9729062410280966, mean_reward: 110.504
+std_reward: 2.690633940170978, mean_reward: 134.183
+std_reward: 33.011348291155876, mean_reward: 53.122
+std_reward: 0.0, mean_reward: 500.0
+std_reward: 2.828681494972525, mean_reward: 115.669
+std_reward: 217.60587892793706, mean_reward: 362.616
+std_reward: 2.15213289552481, mean_reward: 92.518
+Tue Nov 21 10:17:46 2023
+timestep 70000
+Tue Nov 21 10:17:46 2023
+std_reward: 19.92230749687395, mean_reward: 86.108
+std_reward: 8.306894485907474, mean_reward: 148.748
+std_reward: 4.043314976600264, mean_reward: 126.902
+std_reward: 4.0820857413827065, mean_reward: 192.976
+std_reward: 37.131993738553824, mean_reward: 46.429
+std_reward: 3.4901209148108325, mean_reward: 99.916
+std_reward: 5.306136447548253, mean_reward: 220.554
+std_reward: 0.0, mean_reward: 500.0
+std_reward: 0.0, mean_reward: 500.0
+std_reward: 55.735519697944866, mean_reward: 122.938
+std_reward: 0.0, mean_reward: 500.0
+std_reward: 0.0, mean_reward: 500.0
+std_reward: 49.011023413105754, mean_reward: 65.172
+std_reward: 3.150312841607957, mean_reward: 102.023
+std_reward: 0.0, mean_reward: 500.0
+Tue Nov 21 11:12:24 2023
+timestep 80000
+std_reward: 6.285799551369737, mean_reward: 150.418
+std_reward: 71.6413254972296, mean_reward: 465.691
+std_reward: 71.55890563724407, mean_reward: 267.532
+std_reward: 2.4815702690030763, mean_reward: 108.053
+std_reward: 38.950386788836894, mean_reward: 59.537
+std_reward: 2.5151491009480926, mean_reward: 95.945
+std_reward: 2.5864098669777764, mean_reward: 104.022
+std_reward: 108.10986000823421, mean_reward: 450.263
+std_reward: 6.419874687250523, mean_reward: 23.703
+std_reward: 26.90054406512999, mean_reward: 491.527
+std_reward: 0.0, mean_reward: 500.0
+std_reward: 87.73856547151885, mean_reward: 472.373
+std_reward: 0.0, mean_reward: 500.0
+std_reward: 0.0, mean_reward: 500.0
+std_reward: 0.0, mean_reward: 500.0
+Tue Nov 21 12:18:19 2023
+timestep 90000
+std_reward: 14.471675922297322, mean_reward: 498.814
+std_reward: 82.29463452133437, mean_reward: 212.127
+std_reward: 7.284259674119258, mean_reward: 90.831
+std_reward: 170.78531056270617, mean_reward: 272.264
+std_reward: 43.756008947343446, mean_reward: 83.541
+std_reward: 32.48768382018023, mean_reward: 47.78
+std_reward: 3.5240032633356058, mean_reward: 139.951
+std_reward: 18.186522454829017, mean_reward: 23.451
+std_reward: 162.92445611386893, mean_reward: 416.76
+std_reward: 11.145171106806751, mean_reward: 185.881
+std_reward: 7.527173174572244, mean_reward: 278.892
+std_reward: 2.540688882960682, mean_reward: 91.57
+std_reward: 22.324528192102964, mean_reward: 77.229
+std_reward: 2.4763683086326234, mean_reward: 101.24
+std_reward: 41.59707965711055, mean_reward: 41.842
+timestep 50000
+std_reward: 2.6186828750347, mean_reward: 110.65
+std_reward: 83.33333421266667, mean_reward: 462.653
+std_reward: 0.0, mean_reward: 500.0
+std_reward: 0.0, mean_reward: 500.0
+std_reward: 19.09234307255136, mean_reward: 496.294
+std_reward: 7.487792131195952, mean_reward: 499.313
+std_reward: 24.986071299826232, mean_reward: 173.171
+std_reward: 48.118853311358116, mean_reward: 492.134
+std_reward: 0.0, mean_reward: 500.0
+std_reward: 0.0, mean_reward: 500.0
+std_reward: 145.10846227563712, mean_reward: 362.724
+std_reward: 2.6791603162184976, mean_reward: 104.79
+std_reward: 0.0, mean_reward: 500.0
+std_reward: 31.98403001499342, mean_reward: 396.268
+std_reward: 0.0, mean_reward: 500.0
+Tue Nov 21 14:39:45 2023
+timestep 40000
+std_reward: 16.995019976451925, mean_reward: 113.536
+std_reward: 29.913126199045134, mean_reward: 494.859
+std_reward: 0.0, mean_reward: 500.0
+std_reward: 0.0, mean_reward: 500.0
+std_reward: 3.3461725896910943, mean_reward: 177.127
+std_reward: 0.0, mean_reward: 500.0
+std_reward: 0.0, mean_reward: 500.0
+std_reward: 0.0, mean_reward: 500.0
+std_reward: 0.0, mean_reward: 500.0
+std_reward: 51.43058121390425, mean_reward: 468.854
+std_reward: 4.635687651255205, mean_reward: 151.28
+std_reward: 0.0, mean_reward: 500.0
+std_reward: 4.883564169743243, mean_reward: 251.651
+std_reward: 5.752806619381534, mean_reward: 106.904
+std_reward: 0.0, mean_reward: 500.0
+Tue Nov 21 15:43:44 2023
+timestep 30000
+std_reward: 5.615457149689596, mean_reward: 241.629
+std_reward: 2.0405636476228817, mean_reward: 119.49
+std_reward: 16.62119177435842, mean_reward: 244.772
+std_reward: 4.817524675598455, mean_reward: 109.116
+std_reward: 0.0, mean_reward: 500.0
+std_reward: 14.559546558873322, mean_reward: 222.598
+std_reward: 3.782897831028483, mean_reward: 149.822
+std_reward: 6.634419040127024, mean_reward: 189.478
+std_reward: 0.0, mean_reward: 500.0
+std_reward: 0.0, mean_reward: 500.0
+std_reward: 0.0, mean_reward: 500.0
+std_reward: 49.699146230091316, mean_reward: 257.308
+std_reward: 4.919397422449216, mean_reward: 145.273
+std_reward: 6.0007858652013235, mean_reward: 179.087
+std_reward: 4.891301565023363, mean_reward: 499.237
+Tue Nov 21 16:39:28 2023
+timestep 20000
+std_reward: 38.243244514554455, mean_reward: 493.943
+std_reward: 10.239113194022226, mean_reward: 141.669
+std_reward: 4.071833002469527, mean_reward: 108.224
+std_reward: 182.06617746028502, mean_reward: 307.355
+std_reward: 54.61038432386279, mean_reward: 476.618
+std_reward: 4.0330275228418655, mean_reward: 112.117
+std_reward: 1.8088601383191572, mean_reward: 97.855
+std_reward: 7.101422674366031, mean_reward: 134.214
+std_reward: 3.3349001484302345, mean_reward: 114.521
+std_reward: 6.121669625192134, mean_reward: 123.369
+std_reward: 7.107527769907058, mean_reward: 148.257
+std_reward: 160.86201888264364, mean_reward: 304.141
+std_reward: 4.754260299983584, mean_reward: 119.003
+std_reward: 7.322608756447391, mean_reward: 131.799
+std_reward: 14.014517615672684, mean_reward: 162.964
+Tue Nov 21 17:29:11 2023
+timestep default 50000
+std_reward: 95.68913992716206, mean_reward: 71.15
+std_reward: 0.0, mean_reward: 500.0
+std_reward: 0.0, mean_reward: 500.0
+std_reward: 2.843975914103352, mean_reward: 112.599
+std_reward: 0.0, mean_reward: 500.0
+std_reward: 11.341192882585146, mean_reward: 343.812
+std_reward: 14.307171313715369, mean_reward: 23.293
+std_reward: 0.0, mean_reward: 500.0
+std_reward: 0.0, mean_reward: 500.0
+std_reward: 0.0, mean_reward: 500.0
+std_reward: 0.0, mean_reward: 500.0
+std_reward: 28.667768922607145, mean_reward: 221.605
+std_reward: 0.0, mean_reward: 500.0
+std_reward: 71.32299936906747, mean_reward: 360.069
+std_reward: 148.60477741647475, mean_reward: 412.123
+Tue Nov 21 18:32:30 2023
+timestep default 50000
+std_reward: 0.0, mean_reward: 500.0
+std_reward: 0.0, mean_reward: 500.0
+std_reward: 0.0, mean_reward: 500.0
+std_reward: 0.0, mean_reward: 500.0
+std_reward: 0.0, mean_reward: 500.0
+std_reward: 0.0, mean_reward: 500.0
+std_reward: 0.0, mean_reward: 500.0
+std_reward: 0.0, mean_reward: 500.0
+Tue Nov 21 19:51:07 2023
+
+
+200k base
+Wed Nov 22 00:17:58 2023
+std_reward: 29.809991613551322, mean_reward: 67.38
+Wed Nov 22 01:09:17 2023
+200k base
+Wed Nov 22 01:09:17 2023
+std_reward: 9.958167502105997, mean_reward: 28.43
+Wed Nov 22 09:06:30 2023
+std_reward: 12.801374230376535, mean_reward: -64.01355794000001
+std_reward: 0.0, mean_reward: 500.0
+std_reward: 3.398529093593286, mean_reward: 142.1
+std_reward: 0.0, mean_reward: 500.0
+std_reward: 0.0, mean_reward: 500.0

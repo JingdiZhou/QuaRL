@@ -3,7 +3,7 @@
 
 ### Train model from scratch(QAT)
 ``
-python train.py --algo ppo --env MountainCarContinuous-v0 --device cuda --optimize-choice base --quantize 32
+python train.py --algo ppo --env MountainCarContinuous-v0 --device cuda --optimize-choice base --quantize 32 -P
 ``
 
 ### Enjoy model trained with quantization(QAT)
@@ -25,9 +25,11 @@ python new_ptq.py --algo ppo --env MountainCarContinuous-v0 --quantized 8 --exp-
 
 #### QAT:
 ``
-python collate_model.py --algo ppo --env MountainCarContinuous --device cuda --optimize-choice base -f logs/
+python collate_model.py --algo ppo --env MountainCarContinuous --device cuda --optimize-choice base -f logs/ --no-render
 ``
 #### PTQ:
 ``
-python collate_model.py --algo ppo --env MountainCarContinuous --device cuda -f quantized
+python collate_model.py --algo ppo --env MountainCarContinuous --device cuda -f quantized --no-render
 ``
+
+#### Post training quantization(PTQ) of all bits
