@@ -1,6 +1,8 @@
-# QuaRL: quantization of Reinforcement Learning (Stable Baselines3 PyTorch)
+# QuaRL: quantization of Reinforcement Learning (Stable Baselines3)
 
+Code for QuaRL, a framework for evaluating the effects of quantization on reinforcement learning policies across different environments, training algorithms and quantization methods.
 
+## Function
 ### Train model from scratch(QAT)
 ``
 python train.py --algo ppo --env MountainCarContinuous-v0 --device cuda --optimize-choice base --quantize 32 -P
