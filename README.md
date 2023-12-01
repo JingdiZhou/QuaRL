@@ -1,4 +1,4 @@
-# QuaRL: quantization of Reinforcement Learning (Stable Baselines3 PyTorch)
+# Quantization and OPtimization of Reinforcement Learning (Stable Baselines3 PyTorch)
 
 
 ### Train model from scratch(QAT)
