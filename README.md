@@ -1,4 +1,4 @@
-# QoRL:Quantization and optimization of Reinforcement Learning (Stable Baselines3 PyTorch)
+# QoRL:Quantization and optimization of Reinforcement Learning (Stable Baselines3 PyTorch)(updating)
 
 
 ### Train model from scratch(QAT)
