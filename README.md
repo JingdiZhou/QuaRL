@@ -10,7 +10,7 @@ cd stable-baselines3
 pip install -e .[docs,tests,extra]
 ```
 
-## Function
+## Basic Usage
 ### Train model from scratch(QAT)
 ```sh
 python train.py --algo ppo --env MountainCarContinuous-v0 --device cuda --optimize-choice base --quantize 32 -P
