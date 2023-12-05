@@ -1,6 +1,6 @@
-# QuaRL: quantization of Reinforcement Learning (Stable Baselines3)
+# QoRL: Quantization and optimization of Reinforcement Learning (Stable Baselines3)
 
-Code for QuaRL, a framework for evaluating the effects of quantization on reinforcement learning policies across different environments, training algorithms and quantization methods.
+Code for QoRL, a framework for evaluating the effects of quantization on reinforcement learning policies across different environments, training algorithms and quantization methods.
 
 ## Function
 ### Train model from scratch(QAT)
@@ -35,3 +35,6 @@ python collate_model.py --algo ppo --env MountainCarContinuous --device cuda -f 
 ``
 
 #### Post training quantization(PTQ) of all bits
+```
+ptq_all.sh dqn CartPole-v1 logs/ base
+```

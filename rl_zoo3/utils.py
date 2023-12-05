@@ -190,14 +190,14 @@ def get_callback_list(hyperparams: Dict[str, Any]) -> List[BaseCallback]:
 
 
 def create_test_env(
-    env_id: str,
-    n_envs: int = 1,
-    stats_path: Optional[str] = None,
-    seed: int = 0,
-    log_dir: Optional[str] = None,
-    should_render: bool = True,
-    hyperparams: Optional[Dict[str, Any]] = None,
-    env_kwargs: Optional[Dict[str, Any]] = None,
+        env_id: str,
+        n_envs: int = 1,
+        stats_path: Optional[str] = None,
+        seed: int = 0,
+        log_dir: Optional[str] = None,
+        should_render: bool = True,
+        hyperparams: Optional[Dict[str, Any]] = None,
+        env_kwargs: Optional[Dict[str, Any]] = None,
 ) -> VecEnv:
     """
     Create environment for testing a trained agent
@@ -369,7 +369,8 @@ def get_hf_trained_models(organization: str = "sb3", check_filename: bool = Fals
         model_name = ModelName(algo, env_name)
 
         # check if there is a model file in the repo
-        if check_filename and not any(f.rfilename == model_name.filename for f in api.model_info(model.modelId).siblings):
+        if check_filename and not any(
+                f.rfilename == model_name.filename for f in api.model_info(model.modelId).siblings):
             continue  # skip model if the repo contains no properly named model file
 
         trained_models[model_name] = (algo, env_id)
@@ -396,9 +397,9 @@ def get_latest_run_id(log_path: str, env_name: EnvironmentName) -> int:
 
 
 def get_saved_hyperparams(
-    stats_path: str,
-    norm_reward: bool = False,
-    test_mode: bool = False,
+        stats_path: str,
+        norm_reward: bool = False,
+        test_mode: bool = False,
 ) -> Tuple[Dict[str, Any], Optional[str]]:
     """
     Retrieve saved hyperparameters given a path.
@@ -458,48 +459,51 @@ class StoreDict(argparse.Action):
 
 
 def get_model_path(
-    optimize_choice: str,
-    quantized: int,
-    exp_id: int,
-    folder: str,
-    algo: str,
-    env_name: EnvironmentName,
-    load_best: bool = False,
-    load_checkpoint: Optional[str] = None,
-    load_last_checkpoint: bool = False,
+        optimize_choice: str,
+        quantized: int,
+        exp_id: int,
+        folder: str,
+        algo: str,
+        env_name: EnvironmentName,
+        load_best: bool = False,
+        load_checkpoint: Optional[str] = None,
+        load_last_checkpoint: bool = False,
 ) -> Tuple[str, str, str]:
+    # original code of SB3:
     # if exp_id == 0:
-        # exp_id = get_latest_run_id(os.path.join(folder, algo), env_name)
-        # print(f"Loading latest experiment, id={quantized}")
+    # exp_id = get_latest_run_id(os.path.join(folder, algo), env_name)
+    # print(f"Loading latest experiment, id={quantized}")
+
+    # Modification of this project:
+    # The following code doesn't include the operation of training from scratch with QAT
     if optimize_choice == "":
         if folder == "rl-trained-agents":
-            print("loading model that needs to be quantized to {} bit(QAT)".format(quantized)) #QAT
-            # log_path = os.path.join(folder, algo, f"{env_name}_{exp_id}")
+            print("loading model that needs to be quantized to {} bit(PTQ)".format(quantized))  # PTQ
             log_path = os.path.join(folder, algo, f"{env_name}_{exp_id}")
-            print(log_path)
+            print("log_path:",log_path)
         elif "quantized" in folder:
-            print("loading model that needs quantized(PTQ) to {} bit".format(quantized)) #PTQ
-            # log_path = os.path.join(folder, algo, f"{env_name}_{exp_id}")
+            print("loading model that has been quantized(PTQ) to {} bit".format(quantized))  # enjoy PTQ
             log_path = os.path.join(folder, algo)
+            print("log_path:",log_path)
     else:
-        if "logs/" in folder:
-            print("loading model trained by user that needs to quantized(PTQ)")
-            log_path = os.path.join(folder)
-            print("###",log_path)
+        if "logs/" in folder: #
+            print("loading model trained by user(train from scratch) that needs to be quantized(PTQ)")
+            log_path = os.path.join(folder, algo, f"{env_name}_32_{optimize_choice}")
+            print("log_path:", log_path)
         else:
-            print(f"load {quantized}bit model experiment") #QAT single case
+            print(f"load QAT {quantized}bit model experiment")  # enjoy QAT single case
             log_path = os.path.join(folder, algo, f"{env_name}_{quantized}_{optimize_choice}")
             # log_path = os.path.join(folder, algo, f"{env_name}_1")
-            print("!!!", log_path)
+            print("log_path:", log_path)
+
+    # original code of SB3:
     # Sanity checks
     # if exp_id > 0:
     #     log_path = os.path.join(folder, algo, f"{env_name}_{exp_id}")
     # else:
     #     log_path = os.path.join(folder, algo)
 
-    print("@@@",log_path)
     assert os.path.isdir(log_path), f"The {log_path} folder was not found"
-
     model_name = ModelName(algo, env_name)
 
     if load_best:
