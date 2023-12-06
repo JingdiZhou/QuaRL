@@ -64,5 +64,18 @@ python collate_model.py --algo ppo --env MountainCarContinuous --device cuda -f 
 ptq_all.sh dqn CartPole-v1 logs/dqn/CartPole-v1_32_base base
 ```
 
-## Framework
+## Current contributions
+
+|  RL Algo | PTQ                | QAT                |
+|----------|--------------------|--------------------|
+| ARS      | :heavy_check_mark: |                    | 
+| A2C      | :heavy_check_mark: | :heavy_check_mark: | 
+| PPO      | :heavy_check_mark: | :heavy_check_mark: | 
+| DQN      | :heavy_check_mark: | :heavy_check_mark: | 
+| QR-DQN   | :heavy_check_mark: |                    | 
+| DDPG     | :heavy_check_mark: |                    | 
+| SAC      | :heavy_check_mark: |                    | 
+| TD3      | :heavy_check_mark: |                    | 
+| TQC      | :heavy_check_mark: |                    | 
+| TRPO     | :heavy_check_mark: |                    | 
 
