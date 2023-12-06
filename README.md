@@ -4,10 +4,11 @@ Code for QoRL, a framework for evaluating the effects of quantization on reinfor
 
 ## Installation
 
-Please install the following SB3 version because of the modifications in SB3
+Please install the following SB3 version because of the modifications in SB3 <br/>
+About the installation of other packages please refer to rl_baselines_zoo : [rl_baseline3_zoo](https://github.com/DLR-RM/rl-baselines3-zoo#installation)
 ```sh
 pip install micronet -i https://pypi.org/simple # QAT module
-cd stable-baselines3 
+cd stable-baselines3 # install SB3
 pip install -e .[docs,tests,extra]
 ```
 
