@@ -6,11 +6,19 @@ Code for QoRL, a framework for evaluating the effects of quantization on reinfor
 
 Please install the following SB3 version because of the modifications in SB3
 ```sh
+pip install micronet -i https://pypi.org/simple # QAT module
 cd stable-baselines3 
 pip install -e .[docs,tests,extra]
 ```
 
 ## Basic usage
+
+### Optional parameters:
+```sh
+-tb terboard_log # using tensorboard
+-P # display the progress bar
+--no-render # don't render the environment
+```
 ### Train model from scratch(QAT)
 ```sh
 python train.py --algo dqn --env CartPole-v1 --device cuda --optimize-choice base --quantize 32 -P
@@ -50,7 +58,10 @@ python collate_model.py --algo dqn --env CartPole-v1 --device cuda -f quantized 
 python collate_model.py --algo ppo --env MountainCarContinuous --device cuda -f quantized --no-render
 ```
 
-#### Post training quantization(PTQ) of all bits
+#### Post training quantization(PTQ) of all bits(Script)
 ```sh
 ptq_all.sh dqn CartPole-v1 logs/dqn/CartPole-v1_32_base base
 ```
+
+## Framework
+
