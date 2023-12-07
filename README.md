@@ -16,9 +16,10 @@ pip install -e .[docs,tests,extra]
 
 ### Optional parameters:
 ```sh
--tb terboard_log # using tensorboard
+-tb tensorboard_log # using tensorboard
 -P # display the progress bar
 --no-render # don't render the environment
+-optimize --sampler random --pruner median # use Optuna for optimizing the hyperparameters
 ```
 ### Train model from scratch(QAT)
 ```sh
