@@ -270,8 +270,7 @@ def enjoy() -> None:  # noqa: C901
 
     except KeyboardInterrupt:
         pass
-
-    mean_reward, std_reward = evaluate_policy(model, env, n_eval_episodes=100, render=False)
+    mean_reward, std_reward = evaluate_policy(model, env, n_eval_episodes=10, render=False)
     print("mean_reward:",mean_reward, "std_reward:",std_reward)
     env.close()
     if args.verbose > 0 and len(successes) > 0:
@@ -284,11 +283,3 @@ def enjoy() -> None:  # noqa: C901
     if args.verbose > 0 and len(episode_lengths) > 0:
         print(f"Mean episode length: {np.mean(episode_lengths):.2f} +/- {np.std(episode_lengths):.2f}")
 
-
-
-
-if __name__ == "__main__":
-    # enjoy()
-    import random
-    random.seed(10)
-    print(random.random())
