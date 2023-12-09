@@ -488,7 +488,7 @@ def get_model_path(
     else:
         if f'{algo}' in folder:  # calling new_ptq.py in ptq_all.sh
             print("loading model trained by user(train from scratch) that needs to be quantized(PTQ)")
-            log_path = os.path.join(folder, algo, f"{env_name}_32_{optimize_choice}")
+            log_path = os.path.join(folder)
             print("log_path:", log_path)
         else: # calling enjoy.py
             print(f"load QAT {quantized}bit model experiment")  # enjoy QAT single case
