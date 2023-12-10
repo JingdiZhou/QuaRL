@@ -20,6 +20,7 @@ pip install -e .[docs,tests,extra]
 -P # display the progress bar
 --no-render # don't render the environment
 -optimize --sampler random --pruner median # use Optuna for optimizing the hyperparameters
+-params # use the parameters provided by user(not from rl_baseline3_zoo). e.g.-params learning_rate:0.01 buffer_size:256
 ```
 ### Train model from scratch(QAT)
 ```sh
