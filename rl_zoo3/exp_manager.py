@@ -14,6 +14,7 @@ import gymnasium as gym
 import numpy as np
 import optuna
 import torch as th
+import wandb
 import yaml
 from gymnasium import spaces
 from huggingface_sb3 import EnvironmentName
@@ -51,7 +52,7 @@ import rl_zoo3.import_envs  # noqa: F401 pytype: disable=import-error
 from rl_zoo3.callbacks import SaveVecNormalizeCallback, TrialEvalCallback
 from rl_zoo3.hyperparams_opt import HYPERPARAMS_SAMPLER
 from rl_zoo3.utils import ALGOS, get_callback_list, get_class_by_name, get_latest_run_id, get_wrapper_class, \
-    linear_schedule
+    linear_schedule, get_latest_run_id_new
 
 
 class ExperimentManager:
@@ -65,6 +66,8 @@ class ExperimentManager:
     def __init__(
             self,
             args: argparse.Namespace,
+            run: wandb.sdk.wandb_run.Run,
+            rho: float,
             optimize_choice: str,
             quantized: int,  # quantized hyperparameters
             algo: str,
@@ -103,6 +106,8 @@ class ExperimentManager:
             show_progress: bool = False,
     ):
         super().__init__()
+        self.run = run
+        self.rho = rho
         self.q = quantized
         self.optimize_choice = optimize_choice
         self.algo = algo
@@ -181,7 +186,8 @@ class ExperimentManager:
         #     self.log_path, f"{self.env_name}_{get_latest_run_id(self.log_path, self.env_name) + 1}{uuid_str}"
         # )
         self.save_path = os.path.join(
-            self.log_path, f"{self.env_name}_{self.q}_{optimize_choice}{uuid_str}"
+            self.log_path,
+            f"{self.env_name}_{self.q}bit_{optimize_choice}_{get_latest_run_id_new(self.log_path, self.env_name, self.q, self.optimize_choice) + 1}{uuid_str}"
         )
         self.params_path = f"{self.save_path}/{self.env_name}"
 
@@ -213,6 +219,8 @@ class ExperimentManager:
         else:
             # Train an agent from scratch
             model = ALGOS[self.algo](
+                run=self.run,
+                rho=self.rho,
                 quantized=self.q,
                 env=env,
                 tensorboard_log=self.tensorboard_log,
@@ -245,7 +253,7 @@ class ExperimentManager:
             )
 
         try:
-            model.learn(self.n_timesteps, **kwargs)
+            model.learn(self.run, self.n_timesteps, **kwargs)
         except KeyboardInterrupt:
             # this allows to save the model when interrupting training
             pass

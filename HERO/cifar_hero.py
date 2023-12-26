@@ -28,8 +28,8 @@ import numpy as np
 from sam import SAM
 
 model_names = sorted(name for name in models.__dict__
-    if name.islower() and not name.startswith("__")
-    and callable(models.__dict__[name]))
+                     if name.islower() and not name.startswith("__")
+                     and callable(models.__dict__[name]))
 
 parser = argparse.ArgumentParser(description='PyTorch CIFAR10/100 Training')
 # Datasets
@@ -50,7 +50,7 @@ parser.add_argument('--lr', '--learning-rate', default=0.1, type=float,
 parser.add_argument('--drop', '--dropout', default=0, type=float,
                     metavar='Dropout', help='Dropout ratio')
 parser.add_argument('--schedule', type=int, nargs='+', default=[150, 225],
-                        help='Decrease learning rate at these epochs.')
+                    help='Decrease learning rate at these epochs.')
 parser.add_argument('--gamma', type=float, default=0.1, help='LR is multiplied by gamma on schedule.')
 parser.add_argument('--momentum', default=0.9, type=float, metavar='M',
                     help='momentum')
@@ -65,8 +65,8 @@ parser.add_argument('--resume', default='', type=str, metavar='PATH',
 parser.add_argument('--arch', '-a', metavar='ARCH', default='resnet20',
                     choices=model_names,
                     help='model architecture: ' +
-                        ' | '.join(model_names) +
-                        ' (default: resnet18)')
+                         ' | '.join(model_names) +
+                         ' (default: resnet18)')
 parser.add_argument('--depth', type=int, default=29, help='Model depth.')
 parser.add_argument('--block-name', type=str, default='BasicBlock',
                     help='the building block for Resnet and Preresnet: BasicBlock, Bottleneck (default: Basicblock for cifar10/cifar100)')
@@ -78,10 +78,9 @@ parser.add_argument('--compressionRate', type=int, default=2, help='Compression 
 parser.add_argument('--manualSeed', type=int, help='manual seed')
 parser.add_argument('-e', '--evaluate', dest='evaluate', action='store_true',
                     help='evaluate model on validation set')
-#Device options
+# Device options
 parser.add_argument('--gpu-id', default='0', type=str,
                     help='id(s) for CUDA_VISIBLE_DEVICES')
-
 
 parser.add_argument('--step_size', default=0.01, type=float,
                     metavar='step_size', help='step size for disturbance')
@@ -111,16 +110,18 @@ if use_cuda:
 best_acc = 0  # best test accuracy
 
 #
-args.checkpoint=args.checkpoint+'adaptive='+str(args.adaptive)+'/epochs='+str(args.epochs)+'/step_size='+str(args.step_size)+'/lambda='+str(args.lambda_hero)+'/manualSeed='+str(args.manualSeed)
-#+'/model_best.pth.tar'
+args.checkpoint = args.checkpoint + 'adaptive=' + str(args.adaptive) + '/epochs=' + str(
+    args.epochs) + '/step_size=' + str(args.step_size) + '/lambda=' + str(args.lambda_hero) + '/manualSeed=' + str(
+    args.manualSeed)
+
+
+# +'/model_best.pth.tar'
 def main():
     global best_acc
     start_epoch = args.start_epoch  # start from epoch 0 or last checkpoint epoch
 
     if not os.path.isdir(args.checkpoint):
         mkdir_p(args.checkpoint)
-
-
 
     # Data
     print('==> Preparing dataset %s' % args.dataset)
@@ -142,7 +143,6 @@ def main():
         dataloader = datasets.CIFAR100
         num_classes = 100
 
-
     trainset = dataloader(root='./data', train=True, download=True, transform=transform_train)
     trainloader = data.DataLoader(trainset, batch_size=args.train_batch, shuffle=True, num_workers=args.workers)
 
@@ -153,43 +153,44 @@ def main():
     print("==> creating model '{}'".format(args.arch))
     if args.arch.startswith('resnext'):
         model = models.__dict__[args.arch](
-                    cardinality=args.cardinality,
-                    num_classes=num_classes,
-                    depth=args.depth,
-                    widen_factor=args.widen_factor,
-                    dropRate=args.drop,
-                )
+            cardinality=args.cardinality,
+            num_classes=num_classes,
+            depth=args.depth,
+            widen_factor=args.widen_factor,
+            dropRate=args.drop,
+        )
     elif args.arch.startswith('densenet'):
         model = models.__dict__[args.arch](
-                    num_classes=num_classes,
-                    depth=args.depth,
-                    growthRate=args.growthRate,
-                    compressionRate=args.compressionRate,
-                    dropRate=args.drop,
-                )
+            num_classes=num_classes,
+            depth=args.depth,
+            growthRate=args.growthRate,
+            compressionRate=args.compressionRate,
+            dropRate=args.drop,
+        )
     elif args.arch.startswith('wrn'):
         model = models.__dict__[args.arch](
-                    num_classes=num_classes,
-                    depth=args.depth,
-                    widen_factor=args.widen_factor,
-                    dropRate=args.drop,
-                )
+            num_classes=num_classes,
+            depth=args.depth,
+            widen_factor=args.widen_factor,
+            dropRate=args.drop,
+        )
     elif args.arch.endswith('resnet'):
         model = models.__dict__[args.arch](
-                    num_classes=num_classes,
-                    depth=args.depth,
-                    block_name=args.block_name,
-                )
+            num_classes=num_classes,
+            depth=args.depth,
+            block_name=args.block_name,
+        )
     else:
         model = models.__dict__[args.arch](num_classes=num_classes)
 
     model = torch.nn.DataParallel(model).cuda()
     cudnn.benchmark = True
-    print('    Total params: %.2fM' % (sum(p.numel() for p in model.parameters())/1000000.0))
+    print('    Total params: %.2fM' % (sum(p.numel() for p in model.parameters()) / 1000000.0))
     criterion = nn.CrossEntropyLoss()
     step_size = args.step_size
     lambda_hero = args.lambda_hero
-    optimizer_sam = SAM(model.parameters(), optim.SGD, rho=step_size, adaptive=args.adaptive, lr=args.lr, momentum=args.momentum, weight_decay=args.weight_decay)
+    optimizer_sam = SAM(model.parameters(), optim.SGD, rho=step_size, adaptive=args.adaptive, lr=args.lr,
+                        momentum=args.momentum, weight_decay=args.weight_decay)
     scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer_sam, T_max=args.epochs)
 
     # Resume
@@ -198,18 +199,17 @@ def main():
         # Load checkpoint.
         print('==> Resuming from checkpoint..')
         assert os.path.isfile(args.resume), 'Error: no checkpoint directory found!'
-        #args.checkpoint = os.path.dirname(args.resume)
+        # args.checkpoint = os.path.dirname(args.resume)
         checkpoint = torch.load(args.resume)
         best_acc = checkpoint['best_acc']
-        start_epoch =0
+        start_epoch = 0
         model.load_state_dict(checkpoint['state_dict'])
         logger = Logger(os.path.join(args.checkpoint, 'log.txt'), title=title)
-        logger.set_names(['Learning Rate', 'Train Loss','HERO Loss', 'Valid Loss', 'Train Acc.', 'Valid Acc.'])
+        logger.set_names(['Learning Rate', 'Train Loss', 'HERO Loss', 'Valid Loss', 'Train Acc.', 'Valid Acc.'])
     else:
         logger = Logger(os.path.join(args.checkpoint, 'log.txt'), title=title)
-        #logger = Logger(os.path.join(args.checkpoint, 'log.txt'), title=title)
-        logger.set_names(['Learning Rate', 'Train Loss','HERO Loss', 'Valid Loss', 'Train Acc.', 'Valid Acc.'])
-
+        # logger = Logger(os.path.join(args.checkpoint, 'log.txt'), title=title)
+        logger.set_names(['Learning Rate', 'Train Loss', 'HERO Loss', 'Valid Loss', 'Train Acc.', 'Valid Acc.'])
 
     if args.evaluate:
         print('\nEvaluation only')
@@ -219,52 +219,51 @@ def main():
 
     # Train and val
     for epoch in range(start_epoch, args.epochs):
-
         print('\nEpoch: [%d | %d] LR: %f' % (epoch + 1, args.epochs, optimizer_sam.param_groups[0]['lr']))
 
-        train_loss, hero_loss, train_acc = train(trainloader, model, criterion, optimizer_sam, epoch, use_cuda,step_size,lambda_hero)
+        train_loss, hero_loss, train_acc = train(trainloader, model, criterion, optimizer_sam, epoch, use_cuda,
+                                                 step_size, lambda_hero)
         test_loss, test_acc = test(testloader, model, criterion, epoch, use_cuda)
 
         # append logger file
-        logger.append([optimizer_sam.param_groups[0]['lr'], train_loss,hero_loss, test_loss, train_acc, test_acc])
+        logger.append([optimizer_sam.param_groups[0]['lr'], train_loss, hero_loss, test_loss, train_acc, test_acc])
 
         # save model
         is_best = test_acc > best_acc
         best_acc = max(test_acc, best_acc)
         save_checkpoint({
-                'epoch': epoch + 1,
-                'state_dict': model.state_dict(),
-                'acc': test_acc,
-                'best_acc': best_acc,
-                'optimizer' : optimizer_sam.state_dict(),
-            }, is_best, checkpoint=args.checkpoint)
+            'epoch': epoch + 1,
+            'state_dict': model.state_dict(),
+            'acc': test_acc,
+            'best_acc': best_acc,
+            'optimizer': optimizer_sam.state_dict(),
+        }, is_best, checkpoint=args.checkpoint)
 
-        scheduler.step() 
+        scheduler.step()
 
     print('Best acc:')
     print(best_acc)
 
-
-    
     logger.plot()
     savefig(os.path.join(args.checkpoint, 'log.eps'))
     logger.close()
 
-def train(trainloader, model, criterion, optimizer_sam, epoch, use_cuda,step_size=0.01,lambda_hero=1):
+
+def train(trainloader, model, criterion, optimizer_sam, epoch, use_cuda, step_size=0.01, lambda_hero=1):
     # switch to train mode
     model.train()
 
     batch_time = AverageMeter()
     data_time = AverageMeter()
     losses = AverageMeter()
-    hero_losses =  AverageMeter()
-    ce_losses =  AverageMeter()
+    hero_losses = AverageMeter()
+    ce_losses = AverageMeter()
     top1 = AverageMeter()
     top5 = AverageMeter()
     end = time.time()
 
     bar = Bar('Processing', max=len(trainloader))
-    
+
     for batch_idx, (inputs, targets) in enumerate(trainloader):
         # measure data loading time
         data_time.update(time.time() - end)
@@ -277,45 +276,44 @@ def train(trainloader, model, criterion, optimizer_sam, epoch, use_cuda,step_siz
 
         loss = criterion(outputs, targets)
         loss.backward(retain_graph=True)
-        loss_grads=[]
-        for index_param,param in enumerate(model.parameters()):
+        loss_grads = []
+        for index_param, param in enumerate(model.parameters()):
             loss_grads.append(param.grad.data.clone().detach())
         # add weight perturbation
         optimizer_sam.first_step(zero_grad=True)
-        
+
         # second forward-backward step
         outputs_new = model(inputs)
         loss_new = criterion(outputs_new, targets)
         criterion_hero = nn.MSELoss()
-        hero_loss =0.
-        loss_grads_new = torch.autograd.grad(loss_new, model.parameters(), retain_graph=True,create_graph=True)
-        loss_grads_copy=[]
-        for index,grad in enumerate(loss_grads_new):
+        hero_loss = 0.
+        loss_grads_new = torch.autograd.grad(loss_new, model.parameters(), retain_graph=True, create_graph=True)
+        loss_grads_copy = []
+        for index, grad in enumerate(loss_grads_new):
             loss_grads_copy.append(grad.data.clone().detach())
         # compute the Hessian-related loss
         if epoch > 0:
-            for index_param,(name,param) in enumerate(model.named_parameters()):
+            for index_param, (name, param) in enumerate(model.named_parameters()):
                 if args.arch.startswith('vgg'):
-                    if 'bias' not in name and 'bn' not in name and (index_param%4) != 2:
-                        for index, (grad,grad_copy) in enumerate(zip(loss_grads,loss_grads_new)):
-                            if index_param == index:                    
+                    if 'bias' not in name and 'bn' not in name and (index_param % 4) != 2:
+                        for index, (grad, grad_copy) in enumerate(zip(loss_grads, loss_grads_new)):
+                            if index_param == index:
                                 if grad != None and grad_copy != None:
-                                     hero_loss  += lambda_hero*criterion_hero(grad_copy,grad)
+                                    hero_loss += lambda_hero * criterion_hero(grad_copy, grad)
                 else:
                     if 'bias' not in name and 'bn' not in name:
-                        for index, (grad,grad_copy) in enumerate(zip(loss_grads,loss_grads_new)):
-                            if index_param == index:                    
+                        for index, (grad, grad_copy) in enumerate(zip(loss_grads, loss_grads_new)):
+                            if index_param == index:
                                 if grad != None and grad_copy != None:
-                                     hero_loss  += lambda_hero*criterion_hero(grad_copy,grad)
-            hero_loss.backward()     
-            for index_param,(param,grad) in enumerate(zip(model.parameters(),loss_grads_copy)):
+                                    hero_loss += lambda_hero * criterion_hero(grad_copy, grad)
+            hero_loss.backward()
+            for index_param, (param, grad) in enumerate(zip(model.parameters(), loss_grads_copy)):
                 param.grad += grad
         optimizer_sam.second_step(zero_grad=True)
 
-
         prec1, prec5 = accuracy(outputs.data, targets.data, topk=(1, 5))
         losses.update(loss.data, inputs.size(0))
-        
+
         hero_losses.update(hero_loss, inputs.size(0))
         top1.update(prec1, inputs.size(0))
         top5.update(prec5, inputs.size(0))
@@ -325,20 +323,21 @@ def train(trainloader, model, criterion, optimizer_sam, epoch, use_cuda,step_siz
         end = time.time()
 
         # plot progress
-        bar.suffix  = '({batch}/{size}) Data: {data:.3f}s | Batch: {bt:.3f}s | Total: {total:} | ETA: {eta:} | Loss: {loss:.4f} | top1: {top1: .4f} | top5: {top5: .4f}'.format(
-                    batch=batch_idx + 1,
-                    size=len(trainloader),
-                    data=data_time.avg,
-                    bt=batch_time.avg,
-                    total=bar.elapsed_td,
-                    eta=bar.eta_td,
-                    loss=losses.avg,
-                    top1=top1.avg,
-                    top5=top5.avg,
-                    )
+        bar.suffix = '({batch}/{size}) Data: {data:.3f}s | Batch: {bt:.3f}s | Total: {total:} | ETA: {eta:} | Loss: {loss:.4f} | top1: {top1: .4f} | top5: {top5: .4f}'.format(
+            batch=batch_idx + 1,
+            size=len(trainloader),
+            data=data_time.avg,
+            bt=batch_time.avg,
+            total=bar.elapsed_td,
+            eta=bar.eta_td,
+            loss=losses.avg,
+            top1=top1.avg,
+            top5=top5.avg,
+        )
         bar.next()
     bar.finish()
     return (losses.avg, hero_losses.avg, top1.avg)
+
 
 def test(testloader, model, criterion, epoch, use_cuda):
     global best_acc
@@ -360,7 +359,7 @@ def test(testloader, model, criterion, epoch, use_cuda):
         with torch.no_grad():
             if use_cuda:
                 inputs, targets = inputs.cuda(), targets.cuda()
-            #inputs, targets = torch.autograd.Variable(inputs), torch.autograd.Variable(targets)
+            # inputs, targets = torch.autograd.Variable(inputs), torch.autograd.Variable(targets)
 
             # compute output
             outputs = model(inputs)
@@ -377,20 +376,21 @@ def test(testloader, model, criterion, epoch, use_cuda):
         end = time.time()
 
         # plot progress
-        bar.suffix  = '({batch}/{size}) Data: {data:.3f}s | Batch: {bt:.3f}s | Total: {total:} | ETA: {eta:} | Loss: {loss:.4f} | top1: {top1: .4f} | top5: {top5: .4f}'.format(
-                    batch=batch_idx + 1,
-                    size=len(testloader),
-                    data=data_time.avg,
-                    bt=batch_time.avg,
-                    total=bar.elapsed_td,
-                    eta=bar.eta_td,
-                    loss=losses.avg,
-                    top1=top1.avg,
-                    top5=top5.avg,
-                    )
+        bar.suffix = '({batch}/{size}) Data: {data:.3f}s | Batch: {bt:.3f}s | Total: {total:} | ETA: {eta:} | Loss: {loss:.4f} | top1: {top1: .4f} | top5: {top5: .4f}'.format(
+            batch=batch_idx + 1,
+            size=len(testloader),
+            data=data_time.avg,
+            bt=batch_time.avg,
+            total=bar.elapsed_td,
+            eta=bar.eta_td,
+            loss=losses.avg,
+            top1=top1.avg,
+            top5=top5.avg,
+        )
         bar.next()
     bar.finish()
     return (losses.avg, top1.avg)
+
 
 def save_checkpoint(state, is_best, checkpoint='checkpoint', filename='checkpoint.pth.tar'):
     filepath = os.path.join(checkpoint, filename)
@@ -398,12 +398,14 @@ def save_checkpoint(state, is_best, checkpoint='checkpoint', filename='checkpoin
     if is_best:
         shutil.copyfile(filepath, os.path.join(checkpoint, 'model_best.pth.tar'))
 
+
 def adjust_learning_rate(optimizer, epoch):
     global state
     if epoch in args.schedule:
         state['lr'] *= args.gamma
         for param_group in optimizer.param_groups:
             param_group['lr'] = state['lr']
+
 
 if __name__ == '__main__':
     main()

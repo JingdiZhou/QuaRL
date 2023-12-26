@@ -396,6 +396,26 @@ def get_latest_run_id(log_path: str, env_name: EnvironmentName) -> int:
     return max_run_id
 
 
+def get_latest_run_id_new(log_path: str, env_name: EnvironmentName, quantized: int, optimize_choice: str) -> int:
+    """
+    Returns the latest run number for the given log name and log path,
+    by finding the greatest number in the directories.
+
+    :param log_path: path to log folder
+    :param env_name:
+    :param quantized: quantization bit
+    :param optimize_choice: optimizer selection,like vanilla optimizer or SAM
+    :return: latest run number
+    """
+    max_run_id = 0
+    for path in glob.glob(os.path.join(log_path, env_name + f"_{quantized}bit_{optimize_choice}_[0-9]*")):
+        run_id = path.split("_")[-1]
+        path_without_run_id = path[: -len(run_id) - 1]
+        if path_without_run_id.endswith(optimize_choice) and run_id.isdigit() and int(run_id) > max_run_id:
+            max_run_id = int(run_id)
+    return max_run_id
+
+
 def get_saved_hyperparams(
         stats_path: str,
         norm_reward: bool = False,
@@ -470,38 +490,35 @@ def get_model_path(
         load_last_checkpoint: bool = False,
 ) -> Tuple[str, str, str]:
     # original code of SB3:
-    # if exp_id == 0:
-    # exp_id = get_latest_run_id(os.path.join(folder, algo), env_name)
-    # print(f"Loading latest experiment, id={quantized}")
-
-    # Modification of this project:
-    # The following code doesn't include the operation of training from scratch with QAT
-    if optimize_choice == "":
-        if folder == "rl-trained-agents":
-            print("loading model that needs to be quantized to {} bit(PTQ)".format(quantized))  # PTQ, call by new_ptq.py
-            log_path = os.path.join(folder, algo, f"{env_name}_{exp_id}")
-            print("log_path:",log_path)
-        elif "quantized" in folder:
-            print("loading model that has been quantized(PTQ) to {} bit".format(quantized))  # enjoy PTQ, call by enjoy.py
-            log_path = os.path.join(folder, algo)
-            print("log_path:",log_path)
-    else:
-        if f'{algo}' in folder:  # calling new_ptq.py in ptq_all.sh
-            print("loading model trained by user(train from scratch) that needs to be quantized(PTQ)")
-            log_path = os.path.join(folder)
-            print("log_path:", log_path)
-        else: # calling enjoy.py
-            print(f"load QAT {quantized}bit model experiment")  # enjoy QAT single case
-            log_path = os.path.join(folder, algo, f"{env_name}_{quantized}_{optimize_choice}")
-            # log_path = os.path.join(folder, algo, f"{env_name}_1")
-            print("log_path:", log_path)
-
-    # original code of SB3:
+    if exp_id == 0:
+        exp_id = get_latest_run_id_new(os.path.join(folder, algo), env_name, quantized, optimize_choice)
+        print(f"Loading latest experiment, id={quantized}bit_{exp_id}")
     # Sanity checks
-    # if exp_id > 0:
-    #     log_path = os.path.join(folder, algo, f"{env_name}_{exp_id}")
-    # else:
-    #     log_path = os.path.join(folder, algo)
+    if exp_id > 0:
+        log_path = os.path.join(folder, algo, f"{env_name}_{exp_id}")
+        # Modification of this project:
+        # The following code doesn't include the operation of training from scratch with QAT
+        if optimize_choice == "":
+            if folder == "rl-trained-agents":
+                print("loading model that needs to be quantized to {} bit(PTQ)".format(
+                    quantized))  # PTQ, call by new_ptq.py
+                log_path = os.path.join(folder, algo, f"{env_name}_{exp_id}")
+                print("log_path:", log_path)
+            elif "quantized" in folder:
+                print("loading model that has been quantized(PTQ) to {} bit".format(
+                    quantized))  # enjoy PTQ, call by enjoy.py
+                log_path = os.path.join(folder, algo, str(exp_id))
+                print("log_path:", log_path)
+        else:
+            if f'{algo}' in folder:  # calling new_ptq.py in ptq_all.sh
+                print("loading model trained by user(train from scratch) that needs to be quantized(PTQ)")
+                log_path = os.path.join(folder)
+                print("log_path:", log_path)
+            else:  # calling enjoy.py
+                print(f"load QAT {quantized}bit model experiment")  # enjoy QAT single case
+                log_path = os.path.join(folder, algo, f"{env_name}_{quantized}bit_{optimize_choice}_{exp_id}")
+                # log_path = os.path.join(folder, algo, f"{env_name}_1")
+                print("log_path:", log_path)
 
     assert os.path.isdir(log_path), f"The {log_path} folder was not found"
     model_name = ModelName(algo, env_name)

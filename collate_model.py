@@ -84,8 +84,8 @@ def collate() -> None:  # noqa: C901
     rewards = []
     lengths = []
     # set the bit list to iterate for reward of model
-    bits_PTQ = [2, 4, 5, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32]
-    bits = [2, 4, 5, 6, 8, 10, 16, 20, 24, 30]
+    bits_PTQ = [1, 2, 3, 4, 5, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32]
+    #bits = [2, 4, 5, 6, 8, 10, 16, 20, 24, 30]
     for bit in bits_PTQ:
         # Going through custom gym packages to let them register in the global registory
         for env_module in args.gym_packages:
@@ -302,16 +302,16 @@ def collate() -> None:  # noqa: C901
         os.mkdir("pngs")
     png_path = "pngs/"
 
-    # plt.subplot(211)
+    print("done")
     plt.title("PTQ reward")
     plt.plot(bits_PTQ, rewards,color = 'g', linestyle = '-',linewidth = 2,marker = "o")
     plt.xlabel("bit")
     plt.ylabel('reward')
-
-    # plt.subplot(212)
-    # plt.plot(bits_PTQ, lengths,color = 'g', linestyle = '-',linewidth = 2,marker = "o")
-    # plt.xlabel("bit")
-    # plt.ylabel("length")
+    #
+    # # plt.subplot(212)
+    # # plt.plot(bits_PTQ, lengths,color = 'g', linestyle = '-',linewidth = 2,marker = "o")
+    # # plt.xlabel("bit")
+    # # plt.ylabel("length")
     plt.savefig(png_path + "_outcome_{}_{}_{}.png".format(args.algo, args.env,args.optimize_choice))
 
 

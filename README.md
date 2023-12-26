@@ -16,29 +16,32 @@ pip install -e .[docs,tests,extra]
 
 ### Optional parameters:
 ```sh
+--rho # rho of SAM optimizer
+--quantized # quantization bit setting, 32 bit will be equal to non-quantization
 -tb tensorboard_log # using tensorboard
 -P # display the progress bar
 --no-render # don't render the environment
--optimize --sampler random --pruner median # use Optuna for optimizing the hyperparameters
 -params # use the parameters provided by user(not from rl_baseline3_zoo). e.g.-params learning_rate:0.01 buffer_size:256
+--track # using wandb to monitor the training
 ```
 ### Train model from scratch(QAT)
 ```sh
-python train.py --algo dqn --env CartPole-v1 --device cuda --optimize-choice base --quantize 32 -P
+python train.py --algo dqn --env CartPole-v1 --device cuda --optimize-choice base --quantize 32 -P --rho 0.05
 ```
 
 
 ### Enjoy model trained with quantization(QAT)
 
 ```sh
-python enjoy.py --algo dqn --env CartPole-v1 --device cuda --optimize-choice base --quantize 8 -f logs/
+python enjoy.py --algo dqn --env CartPole-v1 --device cuda --optimize-choice base --quantize 32 -f logs/ --exp-id 2 
+#if don't use --exp-id, the latest random seed model will be ran(default)
 ```
 
 
 ### Enjoy model trained with quantization(PTQ)
 
 ```sh
-python enjoy.py --algo dqn --env CartPole-v1 -f quantized/8 
+python enjoy.py --algo dqn --env CartPole-v1 -f quantized/8 --exp-id 2
 ```
 
 ### Post training quantization(PTQ) 
@@ -56,16 +59,19 @@ python collate_model.py --algo dqn --env CartPole-v1 --device cuda --optimize-ch
 ```sh
 python collate_model.py --algo dqn --env CartPole-v1 --device cuda -f quantized --no-render
 ```
-#### PTQ:
-```sh
-python collate_model.py --algo ppo --env MountainCarContinuous --device cuda -f quantized --no-render
-```
 
 #### Post training quantization(PTQ) of all bits(Script)
 ```sh
-ptq_all.sh dqn CartPole-v1 logs/dqn/CartPole-v1_32_base base
+ptq_all.sh dqn CartPole-v1 logs/dqn/CartPole-v1_32bit_base_2 base 2
+# the third parameter is the model path, the fourth parameter is the optimize_choice, the fifth parameter is exp-id:random seed
 ```
-
+### Plot training curves
+given a path of a specific directory which contains trained models of different random seeds, for example, logs/dqn, the script will get all the files satisfied the request.
+to plot all the training data to one curve <br/>
+currently support data of SAM and base(HERO later) 
+```sh
+python plot_outcome.py --algo dqn --env CartPole-v1 -s -f logs/dqn  #-f: the directory path containing the log file(s); -s save figure
+```
 ## Current contributions
 
 |  RL Algo | PTQ                | QAT                |

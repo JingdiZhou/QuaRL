@@ -20,11 +20,12 @@ from rl_zoo3.utils import ALGOS, StoreDict
 
 def params():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--quant-delay", help="The quant-delay means the number of steps that you want your normal "
-                                              "floating point training sustain. So after the quant-delay of normal "
-                                              "training, the quantization aware training would be started.",
-                        type=int)
+    # parser.add_argument("--quant-delay", help="The quant-delay means the number of steps that you want your normal "
+    #                                           "floating point training sustain. So after the quant-delay of normal "
+    #                                           "training, the quantization aware training would be started.",
+    #                     type=int)
     parser.add_argument("--quantized", help="Quantization bits", default=32, type=int)
+    parser.add_argument('--rho', default=0.05, type=float, help='rho of SAM')
     parser.add_argument("--optimize-choice", type=str, default="base", choices=["base", "HERO", "SAM"])
     parser.add_argument("--algo", help="RL Algorithm", default="ppo", type=str, required=False,
                         choices=list(ALGOS.keys()))
@@ -216,7 +217,7 @@ def train(args) -> None:
                 "if you want to use Weights & Biases to track experiment, please install W&B via `pip install wandb`"
             ) from e
 
-        run_name = f"{args.env}__{args.algo}__{args.seed}__{int(time.time())}"
+        run_name = f"{args.env}_{args.algo}_{args.optimize_choice}_lr{args.hyperparams['learning_rate']}_rho{args.rho}_seed{args.seed}_time{int(time.time())}"
         tags = [*args.wandb_tags, f"v{sb3.__version__}"]
         run = wandb.init(
             name=run_name,
@@ -229,9 +230,10 @@ def train(args) -> None:
             save_code=True,  # optional
         )
         args.tensorboard_log = f"runs/{run_name}"
-
     exp_manager = ExperimentManager(
         args,
+        run,
+        args.rho,
         args.optimize_choice,
         args.quantized,
         args.algo,

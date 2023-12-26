@@ -126,7 +126,6 @@ def enjoy() -> None:  # noqa: C901
                 args.load_checkpoint,
                 args.load_last_checkpoint,
             )
-            print("&&&&&&&&&",log_path)
 
     print(f"Loading {model_path}")
 
