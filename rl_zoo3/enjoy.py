@@ -6,6 +6,8 @@ import sys
 import numpy as np
 import torch as th
 import yaml
+import wandb
+import time
 from huggingface_sb3 import EnvironmentName
 from stable_baselines3.common.callbacks import tqdm
 from stable_baselines3.common.utils import set_random_seed
@@ -16,11 +18,13 @@ from rl_zoo3.exp_manager import ExperimentManager
 from rl_zoo3.load_from_hub import download_from_hub
 from rl_zoo3.utils import StoreDict, get_model_path
 from stable_baselines3.common.evaluation import evaluate_policy
+import stable_baselines3 as sb3
 
 
 def enjoy() -> None:  # noqa: C901
     parser = argparse.ArgumentParser()
     parser.add_argument("--optimize-choice", type=str, default="", choices=["base", "HERO", "SAM"])
+    parser.add_argument('--rho', default=0.05, type=float, help='rho of SAM')
     parser.add_argument("--quantized",help="quantization bit",type=int,default=8)
     parser.add_argument("--env", help="environment ID", type=EnvironmentName, default="CartPole-v1")
     parser.add_argument("-f", "--folder", help="Log folder", type=str, default="rl-trained-agents")
@@ -75,6 +79,12 @@ def enjoy() -> None:  # noqa: C901
         action="store_true",
         default=False,
         help="if toggled, display a progress bar using tqdm and rich",
+    )
+    parser.add_argument("--wandb-project-name", type=str, default="sb3", help="the wandb's project name")
+    parser.add_argument("--wandb-entity", type=str, default=None, help="the entity (team) of wandb's project")
+    parser.add_argument(
+        "-tags", "--wandb-tags", type=str, default=[], nargs="+",
+        help="Tags for wandb run, e.g.: -tags optimized pr-123"
     )
     args = parser.parse_args()
 
@@ -198,7 +208,28 @@ def enjoy() -> None:  # noqa: C901
     if "HerReplayBuffer" in hyperparams.get("replay_buffer_class", ""):
         kwargs["env"] = env
 
-    model = ALGOS[algo].load(args.quantized, model_path, custom_objects=custom_objects, device=args.device, **kwargs)
+    try:
+        import wandb
+    except ImportError as e:
+        raise ImportError(
+            "if you want to use Weights & Biases to track experiment, please install W&B via `pip install wandb`"
+        ) from e
+
+    run_name = f"{args.env}_{args.algo}_{args.optimize_choice}_seed{args.seed}_time{int(time.time())}"
+    tags = [*args.wandb_tags, f"v{sb3.__version__}"]
+    run = wandb.init(
+        name=run_name,
+        project=args.wandb_project_name,
+        entity=args.wandb_entity,
+        tags=tags,
+        config=vars(args),
+        sync_tensorboard=True,  # auto-upload sb3's tensorboard metrics
+        monitor_gym=True,  # auto-upload the videos of agents playing the game
+        save_code=True,  # optional
+    )
+    args.tensorboard_log = f"runs/{run_name}"
+
+    model = ALGOS[algo].load(run,args.rho,args.quantized, model_path, custom_objects=custom_objects, device=args.device, **kwargs)
     obs = env.reset()
 
     # Deterministic by default except for atari games

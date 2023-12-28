@@ -1,7 +1,5 @@
 gym==0.26.2
-stable-baselines3[extra_no_roms,tests,docs]>=2.1.0
-sb3-contrib>=2.1.0
-box2d-py==2.3.8
+sb3_contrib==2.1.0
 pybullet
 # minigrid
 # scikit-optimize
@@ -15,8 +13,11 @@ plotly
 rliable>=1.0.5
 wandb
 huggingface_sb3>=2.3
+huggingface_hub
 seaborn
 tqdm
 rich
 moviepy
 ruff
+box2d-py==2.3.8
+tensorboard

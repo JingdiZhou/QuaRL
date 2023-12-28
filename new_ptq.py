@@ -4,6 +4,8 @@ import argparse
 import os
 import sys
 import yaml
+import time
+import stable_baselines3 as sb3
 from huggingface_sb3 import EnvironmentName
 from stable_baselines3.common.callbacks import tqdm
 from stable_baselines3.common.utils import set_random_seed
@@ -84,6 +86,7 @@ def conv_Q(W, n):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--optimize-choice", type=str, default="", choices=["base", "HERO", "SAM"])
+    parser.add_argument('--rho', default=0.05, type=float, help='rho of SAM')
     parser.add_argument("--quantized", help="quantization bit", type=int, default=32)
     parser.add_argument("--env", help="environment ID", type=EnvironmentName, default="CartPole-v1")
     parser.add_argument("-f", "--folder", help="Log folder", type=str, default="rl-trained-agents")
@@ -111,6 +114,19 @@ if __name__ == "__main__":
         action="store_true",
         default=False,
         help="Load last checkpoint instead of last model if available",
+    )
+    parser.add_argument("--wandb-project-name", type=str, default="sb3", help="the wandb's project name")
+    parser.add_argument("--wandb-entity", type=str, default=None, help="the entity (team) of wandb's project")
+    parser.add_argument(
+        "-P",
+        "--progress",
+        action="store_true",
+        default=False,
+        help="if toggled, display a progress bar using tqdm and rich",
+    )
+    parser.add_argument(
+        "-tags", "--wandb-tags", type=str, default=[], nargs="+",
+        help="Tags for wandb run, e.g.: -tags optimized pr-123"
     )
 
     args = parser.parse_args()
@@ -180,7 +196,27 @@ if __name__ == "__main__":
     # # overwrite with command line arguments
     # if args.env_kwargs is not None:
     #     env_kwargs.update(args.env_kwargs)
-    model = ALGOS[algo].load(quantized=32,
+    try:
+        import wandb
+    except ImportError as e:
+        raise ImportError(
+            "if you want to use Weights & Biases to track experiment, please install W&B via `pip install wandb`"
+        ) from e
+
+    run_name = f"{args.env}_{args.algo}_{args.optimize_choice}_seed{args.seed}_time{int(time.time())}"
+    tags = [*args.wandb_tags, f"v{sb3.__version__}"]
+    run = wandb.init(
+        name=run_name,
+        project=args.wandb_project_name,
+        entity=args.wandb_entity,
+        tags=tags,
+        config=vars(args),
+        sync_tensorboard=True,  # auto-upload sb3's tensorboard metrics
+        monitor_gym=True,  # auto-upload the videos of agents playing the game
+        save_code=True,  # optional
+    )
+    args.tensorboard_log = f"runs/{run_name}"
+    model = ALGOS[algo].load(run=run, rho=args.rho, quantized=32,
                              path=model_path)  # PTQ loaded model no need to add fake quantization module in the network,so keep passing 32 bit the model
     data = model.get_parameters()  # like data.keys() : ['policy','policy.optimizer']  critics (value functions) and policies (pi functions).
 

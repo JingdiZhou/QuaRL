@@ -8,8 +8,9 @@ Please install the following SB3 version because of the modifications in SB3 <br
 About the installation of other packages please refer to rl_baselines_zoo : [rl_baseline3_zoo](https://github.com/DLR-RM/rl-baselines3-zoo#installation)
 ```sh
 pip install micronet -i https://pypi.org/simple # QAT module
+pip install -r requirements.txt
 cd stable-baselines3 # install SB3
-pip install -e .[docs,tests,extra]
+pip install -e .
 ```
 
 ## Basic usage
@@ -24,9 +25,20 @@ pip install -e .[docs,tests,extra]
 -params # use the parameters provided by user(not from rl_baseline3_zoo). e.g.-params learning_rate:0.01 buffer_size:256
 --track # using wandb to monitor the training
 ```
+## Quick start to train(search lr and rho)
+```sh
+bash auto_train.sh a2c CartPole-v1 32 20 1000000 search_all
+# $1 is the name of algorithm
+# $2 is the name of environment
+# $3 is the set of quantization bit(QAT), using 32 bit means no QAT
+# $4 is the test times(seeds number)
+# $5 is timestep for training
+# $6 is the choice of training, search all lr and rho, search lr , search rho
+```
+
 ### Train model from scratch(QAT)
 ```sh
-python train.py --algo dqn --env CartPole-v1 --device cuda --optimize-choice base --quantize 32 -P --rho 0.05
+python train.py --algo dqn --env CartPole-v1 --device cuda --optimize-choice base --quantize 32 -P --rho 0.05 --track
 ```
 
 
@@ -66,7 +78,7 @@ ptq_all.sh dqn CartPole-v1 logs/dqn/CartPole-v1_32bit_base_2 base 2
 # the third parameter is the model path, the fourth parameter is the optimize_choice, the fifth parameter is exp-id:random seed
 ```
 ### Plot training curves
-given a path of a specific directory which contains trained models of different random seeds, for example, logs/dqn, the script will get all the files satisfied the request.
+given a path of a specific directory which contains trained models of different random seeds, for example, logs/dqn, the script will get all the files satisfied the request
 to plot all the training data to one curve <br/>
 currently support data of SAM and base(HERO later) 
 ```sh

@@ -151,7 +151,7 @@ def params():
         default=False,
         help="if toggled, this experiment will be tracked with Weights and Biases",
     )
-    parser.add_argument("--wandb-project-name", type=str, default="sb3", help="the wandb's project name")
+    parser.add_argument("--wandb-project-name", type=str, default="", help="the wandb's project name")
     parser.add_argument("--wandb-entity", type=str, default=None, help="the entity (team) of wandb's project")
     parser.add_argument(
         "-P",
@@ -216,12 +216,18 @@ def train(args) -> None:
             raise ImportError(
                 "if you want to use Weights & Biases to track experiment, please install W&B via `pip install wandb`"
             ) from e
-
-        run_name = f"{args.env}_{args.algo}_{args.optimize_choice}_lr{args.hyperparams['learning_rate']}_rho{args.rho}_seed{args.seed}_time{int(time.time())}"
+        if args.hyperparams:
+            run_name = f"{args.env}_{args.algo}_{args.optimize_choice}_lr{args.hyperparams['learning_rate']}_rho{args.rho}_seed{args.seed}_time{int(time.time())}"
+        else:
+            run_name = f"{args.env}_{args.algo}_{args.optimize_choice}_SuggestedLR_rho{args.rho}_seed{args.seed}_time{int(time.time())}"
+        if args.wandb_project_name:
+            wandb_project_name = args.wandb_project_name
+        else:
+            wandb_project_name = args.algo + "_" + args.env
         tags = [*args.wandb_tags, f"v{sb3.__version__}"]
         run = wandb.init(
             name=run_name,
-            project=args.wandb_project_name,
+            project=wandb_project_name,
             entity=args.wandb_entity,
             tags=tags,
             config=vars(args),
