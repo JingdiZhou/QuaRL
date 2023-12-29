@@ -34,6 +34,9 @@ bash auto_train.sh a2c CartPole-v1 32 20 1000000 search_all
 # $5 is timestep for training
 # $6 is the choice of training, search all lr and rho, search lr , search rho
 ```
+### Grid search using wandb.sweep
+...updating
+
 
 ### Train model from scratch(QAT)
 ```sh
