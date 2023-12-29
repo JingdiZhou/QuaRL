@@ -5,6 +5,7 @@ from typing import Any, Callable, Dict, List, Optional, Union
 
 import gymnasium as gym
 import numpy as np
+import wandb
 
 from stable_baselines3.common.logger import Logger
 
@@ -60,7 +61,6 @@ class BaseCallback(ABC):
         self.model = model
         self.training_env = model.get_env()
         self.logger = model.logger
-        self.run = model.run
         
         self._init_callback()
 
@@ -488,14 +488,14 @@ class EvalCallback(EventCallback):
             # Add to current Logger
             self.logger.record("eval/mean_reward", float(mean_reward))
             self.logger.record("eval/mean_ep_length", mean_ep_length)
-            self.run.log({"evaluation/mean_reward":float(mean_reward),"evaluation/mean_ep_length":mean_ep_length})
+            wandb.log({"evaluation/mean_reward":float(mean_reward),"evaluation/mean_ep_length":mean_ep_length})
 
             if len(self._is_success_buffer) > 0:
                 success_rate = np.mean(self._is_success_buffer)
                 if self.verbose >= 1:
                     print(f"Success rate: {100 * success_rate:.2f}%")
                 self.logger.record("eval/success_rate", success_rate)
-                self.run.log({"evaluation/success_rate":success_rate})
+                wandb.log({"evaluation/success_rate":success_rate})
 
             # Dump log so the evaluation results are printed with the correct timestep
             self.logger.record("time/total_timesteps", self.num_timesteps, exclude="tensorboard")

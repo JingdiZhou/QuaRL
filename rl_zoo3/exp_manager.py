@@ -66,7 +66,6 @@ class ExperimentManager:
     def __init__(
             self,
             args: argparse.Namespace,
-            run: wandb.sdk.wandb_run.Run,
             rho: float,
             optimize_choice: str,
             quantized: int,  # quantized hyperparameters
@@ -106,7 +105,6 @@ class ExperimentManager:
             show_progress: bool = False,
     ):
         super().__init__()
-        self.run = run
         self.rho = rho
         self.q = quantized
         self.optimize_choice = optimize_choice
@@ -219,7 +217,6 @@ class ExperimentManager:
         else:
             # Train an agent from scratch
             model = ALGOS[self.algo](
-                run=self.run,
                 rho=self.rho,
                 quantized=self.q,
                 env=env,
@@ -253,7 +250,7 @@ class ExperimentManager:
             )
 
         try:
-            model.learn(self.run, self.n_timesteps, **kwargs)
+            model.learn(self.n_timesteps, **kwargs)
         except KeyboardInterrupt:
             # this allows to save the model when interrupting training
             pass

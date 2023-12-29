@@ -70,7 +70,6 @@ class A2C(OnPolicyAlgorithm):
 
     def __init__(
         self,
-        run: wandb.sdk.wandb_run.Run,
         rho: float,
         quantized: int,
         policy: Union[str, Type[ActorCriticPolicy]],
@@ -122,9 +121,8 @@ class A2C(OnPolicyAlgorithm):
                 spaces.MultiBinary,
             ),
             quantized=quantized,
-            run=run,
+
         )
-        self.run = run
         self.rho = rho
         self.q = quantized
         self.optimize_choice = optimize_choice
@@ -234,13 +232,12 @@ class A2C(OnPolicyAlgorithm):
         self.logger.record("train/entropy_loss", entropy_loss.item())
         self.logger.record("train/policy_loss", policy_loss.item())
         self.logger.record("train/value_loss", value_loss.item())
-        self.run.log({"train/entropy_loss": entropy_loss.item(), "train/policy_loss": policy_loss.item(),"train/value_loss": value_loss.item()})
+        wandb.log({"train/entropy_loss": entropy_loss.item(), "train/policy_loss": policy_loss.item(),"train/value_loss": value_loss.item()})
         if hasattr(self.policy, "log_std"):
             self.logger.record("train/std", th.exp(self.policy.log_std).mean().item())
 
     def learn(
         self: SelfA2C,
-        run: wandb.sdk.wandb_run.Run,
         total_timesteps: int,
         callback: MaybeCallback = None,
         log_interval: int = 100,
@@ -249,7 +246,6 @@ class A2C(OnPolicyAlgorithm):
         progress_bar: bool = False,
     ) -> SelfA2C:
         return super().learn(
-            run=run,
             total_timesteps=total_timesteps,
             callback=callback,
             log_interval=log_interval,

@@ -99,7 +99,6 @@ class OnPolicyAlgorithm(BaseAlgorithm):
             supported_action_spaces=supported_action_spaces,
             # quantized=quantized,
         )
-        self.run = run
         self.q=quantized
         self.n_steps = n_steps
         self.gamma = gamma
@@ -241,7 +240,6 @@ class OnPolicyAlgorithm(BaseAlgorithm):
 
     def learn(
         self: SelfOnPolicyAlgorithm,
-        run: wandb.sdk.wandb_run.Run,
         total_timesteps: int,
         callback: MaybeCallback = None,
         log_interval: int = 1,
@@ -278,10 +276,11 @@ class OnPolicyAlgorithm(BaseAlgorithm):
                 time_elapsed = max((time.time_ns() - self.start_time) / 1e9, sys.float_info.epsilon) #calculate the time from start
                 fps = int((self.num_timesteps - self._num_timesteps_at_start) / time_elapsed)  #FramePerSecond
                 self.logger.record("time/iterations", iteration, exclude="tensorboard")
+                wandb.log({"train/iterations":iteration})
                 if len(self.ep_info_buffer) > 0 and len(self.ep_info_buffer[0]) > 0:
                     self.logger.record("rollout/ep_rew_mean", safe_mean([ep_info["r"] for ep_info in self.ep_info_buffer]))
                     self.logger.record("rollout/ep_len_mean", safe_mean([ep_info["l"] for ep_info in self.ep_info_buffer]))
-                    self.run.log({"train/ep_rew_mean":safe_mean([ep_info["r"] for ep_info in self.ep_info_buffer]),
+                    wandb.log({"train/ep_rew_mean":safe_mean([ep_info["r"] for ep_info in self.ep_info_buffer]),
                                   "train/ep_len_mean":safe_mean([ep_info["l"] for ep_info in self.ep_info_buffer]),
                                   "train/time_fps": fps,})
                 self.logger.record("time/fps", fps)

@@ -223,7 +223,7 @@ def train(args) -> None:
         if args.wandb_project_name:
             wandb_project_name = args.wandb_project_name
         else:
-            wandb_project_name = "Jingdi's Training_" + args.algo + "_" + args.env
+            wandb_project_name = args.algo + "_" + args.env
         tags = [*args.wandb_tags, f"v{sb3.__version__}"]
         run = wandb.init(
             name=run_name,
@@ -238,7 +238,6 @@ def train(args) -> None:
         args.tensorboard_log = f"runs/{run_name}"
     exp_manager = ExperimentManager(
         args,
-        run,
         args.rho,
         args.optimize_choice,
         args.quantized,

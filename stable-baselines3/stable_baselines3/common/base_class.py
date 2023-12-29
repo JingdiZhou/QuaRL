@@ -518,7 +518,6 @@ class BaseAlgorithm(ABC):
     @abstractmethod
     def learn(
         self: SelfBaseAlgorithm,
-        run: wandb.sdk.wandb_run.Run,
         total_timesteps: int,
         callback: MaybeCallback = None,
         log_interval: int = 100,
@@ -650,7 +649,6 @@ class BaseAlgorithm(ABC):
     @classmethod
     def load(  # noqa: C901
         cls: Type[SelfBaseAlgorithm],
-        run: wandb.sdk.wandb_run.Run,
         rho: float,
         quantized: int,
         path: Union[str, pathlib.Path, io.BufferedIOBase],
@@ -741,7 +739,6 @@ class BaseAlgorithm(ABC):
 
         # pytype: disable=not-instantiable,wrong-keyword-args
         model = cls(
-            run,
             rho,
             quantized,
             policy=data["policy_class"],

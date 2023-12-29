@@ -5,8 +5,10 @@ import sys
 
 import numpy as np
 import torch as th
+import wandb
 import yaml
 from huggingface_sb3 import EnvironmentName
+import stable_baselines3 as sb3
 from stable_baselines3.common.callbacks import tqdm
 from stable_baselines3.common.utils import set_random_seed
 
@@ -79,10 +81,50 @@ def collate() -> None:  # noqa: C901
         default=False,
         help="if toggled, display a progress bar using tqdm and rich",
     )
+    parser.add_argument(
+        "--track",
+        action="store_true",
+        default=False,
+        help="if toggled, this experiment will be tracked with Weights and Biases",
+    )
+    parser.add_argument("--wandb-project-name", type=str, default="", help="the wandb's project name")
+    parser.add_argument("--wandb-entity", type=str, default=None, help="the entity (team) of wandb's project")
+    parser.add_argument(
+        "-tags", "--wandb-tags", type=str, default=[], nargs="+",
+        help="Tags for wandb run, e.g.: -tags optimized pr-123"
+    )
     args = parser.parse_args()
 
     rewards = []
     lengths = []
+    if args.track:
+        try:
+            import wandb
+        except ImportError as e:
+            raise ImportError(
+                "if you want to use Weights & Biases to track experiment, please install W&B via `pip install wandb`"
+            ) from e
+        if args.hyperparams:
+            run_name = f"{args.env}_{args.algo}_{args.optimize_choice}_lr{args.hyperparams['learning_rate']}_rho{args.rho}_seed{args.seed}_time{int(time.time())}"
+        else:
+            run_name = f"{args.env}_{args.algo}_{args.optimize_choice}_SuggestedLR_rho{args.rho}_seed{args.seed}_time{int(time.time())}"
+        if args.wandb_project_name:
+            wandb_project_name = args.wandb_project_name
+        else:
+            wandb_project_name = "Jingdi's Training_" + args.algo + "_" + args.env
+        tags = [*args.wandb_tags, f"v{sb3.__version__}"]
+        run = wandb.init(
+            name=run_name,
+            project=wandb_project_name,
+            entity=args.wandb_entity,
+            tags=tags,
+            config=vars(args),
+            sync_tensorboard=True,  # auto-upload sb3's tensorboard metrics
+            monitor_gym=True,  # auto-upload the videos of agents playing the game
+            save_code=True,  # optional
+        )
+        args.tensorboard_log = f"runs/{run_name}"
+
     # set the bit list to iterate for reward of model
     bits_PTQ = [1, 2, 3, 4, 5, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32]
     #bits = [2, 4, 5, 6, 8, 10, 16, 20, 24, 30]

@@ -95,7 +95,6 @@ class SAC(OffPolicyAlgorithm):
 
     def __init__(
             self,
-            run: wandb.sdk.wandb_run.Run,
             rho: float,
             quantized: int,
             policy: Union[str, Type[SACPolicy]],
@@ -128,7 +127,6 @@ class SAC(OffPolicyAlgorithm):
             optimize_choice: str = "base",
     ):
         super().__init__(
-            run,
             quantized,
             policy,
             env,
@@ -156,7 +154,6 @@ class SAC(OffPolicyAlgorithm):
             supported_action_spaces=(spaces.Box,),
             support_multi_env=True
         )
-        self.run = run
         self.rho = rho
         self.q = quantized
         self.optimize_choice = optimize_choice
@@ -343,10 +340,10 @@ class SAC(OffPolicyAlgorithm):
         self.logger.record("train/ent_coef", np.mean(ent_coefs))
         self.logger.record("train/actor_loss", np.mean(actor_losses))
         self.logger.record("train/critic_loss", np.mean(critic_losses))
-        self.run.log({"train/actor_loss": np.mean(actor_losses), "train/critic_loss": np.mean(critic_losses),"train/ent_coef":np.mean(ent_coefs)})
+        wandb.log({"train/actor_loss": np.mean(actor_losses), "train/critic_loss": np.mean(critic_losses),"train/ent_coef":np.mean(ent_coefs)})
         if len(ent_coef_losses) > 0:
             self.logger.record("train/ent_coef_loss", np.mean(ent_coef_losses))
-            self.run.log({"train/ent_coef_loss":np.mean(ent_coef_losses)})
+            wandb.log({"train/ent_coef_loss":np.mean(ent_coef_losses)})
 
     def learn(
             self: SelfSAC,

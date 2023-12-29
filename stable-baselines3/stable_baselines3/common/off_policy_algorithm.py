@@ -82,7 +82,6 @@ class OffPolicyAlgorithm(BaseAlgorithm):
 
     def __init__(
         self,
-        run: wandb.sdk.wandb_run.Run,
         quantized: int,
         policy: Union[str, Type[BasePolicy]],
         env: Union[GymEnv, str],
@@ -129,7 +128,6 @@ class OffPolicyAlgorithm(BaseAlgorithm):
             supported_action_spaces=supported_action_spaces,
         )
         self.q = quantized
-        self.run = run
         self.buffer_size = buffer_size
         self.batch_size = batch_size
         self.learning_starts = learning_starts
@@ -299,7 +297,6 @@ class OffPolicyAlgorithm(BaseAlgorithm):
 
     def learn(
         self: SelfOffPolicyAlgorithm,
-        run: wandb.sdk.wandb_run.Run,
         total_timesteps: int,
         callback: MaybeCallback = None,
         log_interval: int = 4,
@@ -406,12 +403,12 @@ class OffPolicyAlgorithm(BaseAlgorithm):
         time_elapsed = max((time.time_ns() - self.start_time) / 1e9, sys.float_info.epsilon)  
         fps = int((self.num_timesteps - self._num_timesteps_at_start) / time_elapsed)
         self.logger.record("time/episodes", self._episode_num, exclude="tensorboard")
-        self.run.log({"train/episodes":self._episode_num})
+        wandb.log({"train/episodes":self._episode_num})
         if len(self.ep_info_buffer) > 0 and len(self.ep_info_buffer[0]) > 0:
             self.logger.record("rollout/ep_rew_mean", safe_mean([ep_info["r"] for ep_info in self.ep_info_buffer]))
             self.logger.record("rollout/ep_len_mean", safe_mean([ep_info["l"] for ep_info in self.ep_info_buffer]))
-            self.run.log({"train/ep_reward_mean":safe_mean([ep_info["r"] for ep_info in self.ep_info_buffer]),
-                          "train/ep_length_mean":safe_mean([ep_info["l"] for ep_info in self.ep_info_buffer])})
+            wandb.log({"train/ep_reward_mean": safe_mean([ep_info["r"] for ep_info in self.ep_info_buffer]),
+                          "train/ep_length_mean": safe_mean([ep_info["l"] for ep_info in self.ep_info_buffer])})
         self.logger.record("time/fps", fps)
         self.logger.record("time/time_elapsed", int(time_elapsed), exclude="tensorboard")
         self.logger.record("time/total_timesteps", self.num_timesteps, exclude="tensorboard")
@@ -420,7 +417,7 @@ class OffPolicyAlgorithm(BaseAlgorithm):
 
         if len(self.ep_success_buffer) > 0:
             self.logger.record("rollout/success_rate", safe_mean(self.ep_success_buffer))
-            self.run.log({"train/success_rate":safe_mean(self.ep_success_buffer)})
+            wandb.log({"train/success_rate":safe_mean(self.ep_success_buffer)})
         # Pass the number of timesteps for tensorboard
         self.logger.dump(step=self.num_timesteps)
 

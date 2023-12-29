@@ -82,7 +82,6 @@ class DQN(OffPolicyAlgorithm):
 
     def __init__(
         self,
-        run: wandb.sdk.wandb_run.Run,
         rho: float,
         quantized: int,
         policy: Union[str, Type[DQNPolicy]],
@@ -113,7 +112,6 @@ class DQN(OffPolicyAlgorithm):
         optimize_choice: str = "base",
     ) -> None:
         super().__init__(
-            run,
             quantized,
             policy,
             env,
@@ -139,7 +137,6 @@ class DQN(OffPolicyAlgorithm):
             supported_action_spaces=(spaces.Discrete,),
             support_multi_env=True,
         )
-        self.run = run
         self.rho = rho
         self.optimize_choice = optimize_choice
 
@@ -196,7 +193,7 @@ class DQN(OffPolicyAlgorithm):
 
         self.exploration_rate = self.exploration_schedule(self._current_progress_remaining)
         self.logger.record("rollout/exploration_rate", self.exploration_rate)
-        self.run.log({"train/exploration_rate":self.exploration_rate})
+        wandb.log({"train/exploration_rate":self.exploration_rate})
 
     def train(self, gradient_steps: int, batch_size: int = 100) -> None:
         # Switch to train mode (this affects batch norm / dropout)
@@ -312,7 +309,7 @@ class DQN(OffPolicyAlgorithm):
 
         self.logger.record("train/n_updates", self._n_updates, exclude="tensorboard")
         self.logger.record("train/loss", np.mean(losses))
-        self.run.log({"train/loss":np.mean(losses)})
+        wandb.log({"train/loss":np.mean(losses)})
 
     def predict(
         self,
@@ -346,7 +343,6 @@ class DQN(OffPolicyAlgorithm):
 
     def learn(
         self: SelfDQN,
-        run: wandb.sdk.wandb_run.Run,
         total_timesteps: int,
         callback: MaybeCallback = None,
         log_interval: int = 4,
@@ -355,7 +351,6 @@ class DQN(OffPolicyAlgorithm):
         progress_bar: bool = False,
     ) -> SelfDQN:
         return super().learn(
-            run=run,
             total_timesteps=total_timesteps,
             callback=callback,
             log_interval=log_interval,
