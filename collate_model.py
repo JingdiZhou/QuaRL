@@ -6,6 +6,7 @@ import sys
 import numpy as np
 import torch as th
 import wandb
+import time
 import yaml
 from huggingface_sb3 import EnvironmentName
 import stable_baselines3 as sb3
@@ -23,7 +24,9 @@ from stable_baselines3.common.evaluation import evaluate_policy
 
 def collate() -> None:  # noqa: C901
     parser = argparse.ArgumentParser()
-    parser.add_argument("--optimize-choice",type=str,default="",choices=["base", "HERO", "SAM"])
+    parser.add_argument('--learning-rate', default=0.0, type=float)
+    parser.add_argument('--rho', default=0.05, type=float, help='rho of SAM')
+    parser.add_argument("--optimize-choice", type=str, default="", choices=["base", "HERO", "SAM"])
     parser.add_argument("--env", help="environment ID", type=EnvironmentName, default="CartPole-v1")
     parser.add_argument("-f", "--folder", help="Log folder", type=str, default="rl-trained-agents")
     parser.add_argument("--algo", help="RL Algorithm", default="ppo", type=str, required=False,
@@ -104,14 +107,14 @@ def collate() -> None:  # noqa: C901
             raise ImportError(
                 "if you want to use Weights & Biases to track experiment, please install W&B via `pip install wandb`"
             ) from e
-        if args.hyperparams:
-            run_name = f"{args.env}_{args.algo}_{args.optimize_choice}_lr{args.hyperparams['learning_rate']}_rho{args.rho}_seed{args.seed}_time{int(time.time())}"
+        if args.learning_rate != 0:
+            run_name = f"PTQ_{args.env}_{args.algo}_{args.optimize_choice}_lr{args.learning_rate}_rho{args.rho}_seed{args.seed}_time{int(time.time())}"
         else:
-            run_name = f"{args.env}_{args.algo}_{args.optimize_choice}_SuggestedLR_rho{args.rho}_seed{args.seed}_time{int(time.time())}"
+            run_name = f"PTQ_{args.env}_{args.algo}_{args.optimize_choice}_SuggestedLR_rho{args.rho}_seed{args.seed}_time{int(time.time())}"
         if args.wandb_project_name:
             wandb_project_name = args.wandb_project_name
         else:
-            wandb_project_name = "Jingdi's Training_" + args.algo + "_" + args.env
+            wandb_project_name = "PTQ" + args.algo + "_" + args.env
         tags = [*args.wandb_tags, f"v{sb3.__version__}"]
         run = wandb.init(
             name=run_name,
@@ -124,10 +127,8 @@ def collate() -> None:  # noqa: C901
             save_code=True,  # optional
         )
         args.tensorboard_log = f"runs/{run_name}"
-
     # set the bit list to iterate for reward of model
     bits_PTQ = [1, 2, 3, 4, 5, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32]
-    #bits = [2, 4, 5, 6, 8, 10, 16, 20, 24, 30]
     for bit in bits_PTQ:
         # Going through custom gym packages to let them register in the global registory
         for env_module in args.gym_packages:
@@ -250,7 +251,7 @@ def collate() -> None:  # noqa: C901
         if "HerReplayBuffer" in hyperparams.get("replay_buffer_class", ""):
             kwargs["env"] = env
 
-        model = ALGOS[algo].load(bit, model_path, custom_objects=custom_objects, device=args.device,
+        model = ALGOS[algo].load(args.rho, bit, model_path, custom_objects=custom_objects, device=args.device,
                                  **kwargs)
         obs = env.reset()
 
@@ -274,7 +275,6 @@ def collate() -> None:  # noqa: C901
 
         try:
             for i in generator:
-                print(i)
                 action, lstm_states = model.predict(
                     obs,  # type: ignore[arg-type]
                     state=lstm_states,
@@ -282,7 +282,7 @@ def collate() -> None:  # noqa: C901
                     deterministic=deterministic,
                 )
                 obs, reward, done, infos = env.step(action)
-
+                print(f"step:{i},reward:{reward},state:{done}")
                 episode_start = done
 
                 if not args.no_render:
@@ -321,6 +321,7 @@ def collate() -> None:  # noqa: C901
 
         except KeyboardInterrupt:
             pass
+        # evaluate the policy
         mean_reward, std_reward = evaluate_policy(model, env, n_eval_episodes=10, render=False)
         print("mean_reward:", mean_reward, "std_reward:", std_reward)
 
@@ -334,27 +335,20 @@ def collate() -> None:  # noqa: C901
         if args.verbose > 0 and len(episode_lengths) > 0:
             print(f"Mean episode length: {np.mean(episode_lengths):.2f} +/- {np.std(episode_lengths):.2f}")
 
-        # rewards.append(np.mean(episode_rewards))
-        # lengths.append(np.mean(episode_lengths))
         rewards.append(mean_reward)
-        # lengths.append(np.mean(episode_lengths))
+        if args.track:
+            wandb.log({"PTQ/reward": mean_reward}, step=bit)
 
         env.close()
-    if not os.path.exists('pngs'):
-        os.mkdir("pngs")
-    png_path = "pngs/"
+    if not os.path.exists('pngs/PTQ'):
+        os.mkdir("pngs/PTQ")
+    png_path = "pngs/PTQ"
 
-    print("done")
     plt.title("PTQ reward")
-    plt.plot(bits_PTQ, rewards,color = 'g', linestyle = '-',linewidth = 2,marker = "o")
+    plt.plot(bits_PTQ, rewards, color='g', linestyle='-', linewidth=2, marker="o")
     plt.xlabel("bit")
     plt.ylabel('reward')
-    #
-    # # plt.subplot(212)
-    # # plt.plot(bits_PTQ, lengths,color = 'g', linestyle = '-',linewidth = 2,marker = "o")
-    # # plt.xlabel("bit")
-    # # plt.ylabel("length")
-    plt.savefig(png_path + "_outcome_{}_{}_{}.png".format(args.algo, args.env,args.optimize_choice))
+    plt.savefig(png_path + "_outcome_{}_{}_{}_lr{}_rho{}.png".format(args.algo, args.env, args.optimize_choice, args.learning_rate, args.rho))
 
 
 if __name__ == "__main__":

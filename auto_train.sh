@@ -26,12 +26,13 @@ if [ -z "$6" ]||[ "$6" = "search_all" ];then
           do
           echo "Test learning_rate: $lr, rho: $rho"
           python train.py --algo $1 --env $2 --device cuda --optimize-choice $opt --quantize $3 -P --rho $rho -params learning_rate:$lr --track -n $5
+          ptq_all.sh $1 $2 "logs/$1/$2_$3bit_"$opt"_$i" $opt $i $rho $lr $opt
         done
       done
     done
   done
 
-# 2.Grid search rho ,keep using lr suggested by default(rl_baselines3_zoo)
+# 2.Grid search rho, keep using lr suggested by default(rl_baselines3_zoo)
 elif [ "$6" = "search_rho" ];then
   for opt in ${Optimizer[*]};do
     for rho in ${Rho[*]};do
@@ -39,6 +40,7 @@ elif [ "$6" = "search_rho" ];then
           do
           echo "Test rho: $rho"
           python train.py --algo $1 --env $2 --device cuda --optimize-choice $opt --quantize $3 -P --rho $rho  --track -n $5
+          ptq_all.sh $1 $2 "logs/{$1}/{$2}_{$3}bit_{$opt}_{$i}" $opt $i $rho 0 $opt
         done
       done
     done
@@ -51,6 +53,7 @@ elif [ "$6" = "search_lr" ];then
         do
         echo "Test learning_rate: $lr"
         python train.py --algo $1 --env $2 --device cuda --optimize-choice $opt --quantize $3 -P --rho 0.05 -params learning_rate:$lr --track -n $5
+        ptq_all.sh $1 $2 "logs/{$1}/{$2}_{$3}bit_{$opt}_{$i}" $opt $i 0.05 $lr $opt
       done
     done
   done
@@ -72,5 +75,6 @@ fi
 ##python plot_PTQ.py --algo $1 --env $2 --device cuda --quantized/ --no-render
 #fi
 
-# auto_train.sh a2c CartPole-v1 32 20 1000000 search_all
+
+
 

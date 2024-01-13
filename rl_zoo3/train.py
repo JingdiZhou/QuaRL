@@ -11,6 +11,7 @@ import numpy as np
 import stable_baselines3 as sb3
 import torch as th
 from stable_baselines3.common.utils import set_random_seed
+from config import sweep_configuration
 
 # Register custom envs
 import rl_zoo3.import_envs  # noqa: F401 pytype: disable=import-error
@@ -20,10 +21,6 @@ from rl_zoo3.utils import ALGOS, StoreDict
 
 def params():
     parser = argparse.ArgumentParser()
-    # parser.add_argument("--quant-delay", help="The quant-delay means the number of steps that you want your normal "
-    #                                           "floating point training sustain. So after the quant-delay of normal "
-    #                                           "training, the quantization aware training would be started.",
-    #                     type=int)
     parser.add_argument("--quantized", help="Quantization bits", default=32, type=int)
     parser.add_argument('--rho', default=0.05, type=float, help='rho of SAM')
     parser.add_argument("--optimize-choice", type=str, default="base", choices=["base", "HERO", "SAM"])
@@ -239,6 +236,7 @@ def train(args) -> None:
     exp_manager = ExperimentManager(
         args,
         args.rho,
+        # wandb.config.rho,
         args.optimize_choice,
         args.quantized,
         args.algo,
@@ -292,8 +290,7 @@ def train(args) -> None:
             mean_reward, std_reward = exp_manager.learn(model, env)
             print("std_reward:", std_reward, "mean_reward:", mean_reward)
             exp_manager.save_trained_model(model)
-            # with open("rl_zoo3/data_all.txt",'a',encoding="utf-8")as f:
-            #     f.write(f"std_reward: {std_reward}, mean_reward: {mean_reward}\n")
+
     else:
         exp_manager.hyperparameters_optimization()
 

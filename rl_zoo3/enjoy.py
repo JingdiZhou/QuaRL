@@ -25,10 +25,11 @@ def enjoy() -> None:  # noqa: C901
     parser = argparse.ArgumentParser()
     parser.add_argument("--optimize-choice", type=str, default="", choices=["base", "HERO", "SAM"])
     parser.add_argument('--rho', default=0.05, type=float, help='rho of SAM')
-    parser.add_argument("--quantized",help="quantization bit",type=int,default=8)
+    parser.add_argument("--quantized", help="quantization bit", type=int, default=8)
     parser.add_argument("--env", help="environment ID", type=EnvironmentName, default="CartPole-v1")
     parser.add_argument("-f", "--folder", help="Log folder", type=str, default="rl-trained-agents")
-    parser.add_argument("--algo", help="RL Algorithm", default="ppo", type=str, required=False, choices=list(ALGOS.keys()))
+    parser.add_argument("--algo", help="RL Algorithm", default="ppo", type=str, required=False,
+                        choices=list(ALGOS.keys()))
     parser.add_argument("-n", "--n-timesteps", help="number of timesteps", default=1000, type=int)
     parser.add_argument("--num-threads", help="Number of threads for PyTorch (-1 to use default)", default=-1, type=int)
     parser.add_argument("--n-envs", help="number of environments", default=1, type=int)
@@ -46,7 +47,7 @@ def enjoy() -> None:  # noqa: C901
         "--load-checkpoint",
         type=int,
         help="Load checkpoint instead of last model if available, "
-        "you must pass the number of timesteps corresponding to it",
+             "you must pass the number of timesteps corresponding to it",
     )
     parser.add_argument(
         "--load-last-checkpoint",
@@ -56,7 +57,8 @@ def enjoy() -> None:  # noqa: C901
     )
     parser.add_argument("--stochastic", action="store_true", default=False, help="Use stochastic actions")
     parser.add_argument(
-        "--norm-reward", action="store_true", default=False, help="Normalize reward if applicable (trained with VecNormalize)"
+        "--norm-reward", action="store_true", default=False,
+        help="Normalize reward if applicable (trained with VecNormalize)"
     )
     parser.add_argument("--seed", help="Random generator seed", type=int, default=0)
     parser.add_argument("--reward-log", help="Where to log reward", default="", type=str)
@@ -68,23 +70,11 @@ def enjoy() -> None:  # noqa: C901
         help="Additional external Gym environment package modules to import",
     )
     parser.add_argument(
-        "--env-kwargs", type=str, nargs="+", action=StoreDict, help="Optional keyword argument to pass to the env constructor"
+        "--env-kwargs", type=str, nargs="+", action=StoreDict,
+        help="Optional keyword argument to pass to the env constructor"
     )
     parser.add_argument(
         "--custom-objects", action="store_true", default=False, help="Use custom objects to solve loading issues"
-    )
-    parser.add_argument(
-        "-P",
-        "--progress",
-        action="store_true",
-        default=False,
-        help="if toggled, display a progress bar using tqdm and rich",
-    )
-    parser.add_argument("--wandb-project-name", type=str, default="sb3", help="the wandb's project name")
-    parser.add_argument("--wandb-entity", type=str, default=None, help="the entity (team) of wandb's project")
-    parser.add_argument(
-        "-tags", "--wandb-tags", type=str, default=[], nargs="+",
-        help="Tags for wandb run, e.g.: -tags optimized pr-123"
     )
     args = parser.parse_args()
 
@@ -115,7 +105,8 @@ def enjoy() -> None:  # noqa: C901
         if "rl-trained-agents" not in folder:
             raise e
         else:
-            print("Pretrained model not found, trying to download it from sb3 Huggingface hub: https://huggingface.co/sb3")
+            print(
+                "Pretrained model not found, trying to download it from sb3 Huggingface hub: https://huggingface.co/sb3")
             # Auto-download
             download_from_hub(
                 algo=algo,
@@ -208,28 +199,8 @@ def enjoy() -> None:  # noqa: C901
     if "HerReplayBuffer" in hyperparams.get("replay_buffer_class", ""):
         kwargs["env"] = env
 
-    try:
-        import wandb
-    except ImportError as e:
-        raise ImportError(
-            "if you want to use Weights & Biases to track experiment, please install W&B via `pip install wandb`"
-        ) from e
-
-    run_name = f"{args.env}_{args.algo}_{args.optimize_choice}_seed{args.seed}_time{int(time.time())}"
-    tags = [*args.wandb_tags, f"v{sb3.__version__}"]
-    run = wandb.init(
-        name=run_name,
-        project=args.wandb_project_name,
-        entity=args.wandb_entity,
-        tags=tags,
-        config=vars(args),
-        sync_tensorboard=True,  # auto-upload sb3's tensorboard metrics
-        monitor_gym=True,  # auto-upload the videos of agents playing the game
-        save_code=True,  # optional
-    )
-    args.tensorboard_log = f"runs/{run_name}"
-
-    model = ALGOS[algo].load(run,args.rho,args.quantized, model_path, custom_objects=custom_objects, device=args.device, **kwargs)
+    model = ALGOS[algo].load(args.rho, args.quantized, model_path, custom_objects=custom_objects, device=args.device,
+                             **kwargs)
     obs = env.reset()
 
     # Deterministic by default except for atari games
@@ -301,7 +272,7 @@ def enjoy() -> None:  # noqa: C901
     except KeyboardInterrupt:
         pass
     mean_reward, std_reward = evaluate_policy(model, env, n_eval_episodes=10, render=False)
-    print("mean_reward:",mean_reward, "std_reward:",std_reward)
+    print("mean_reward:", mean_reward, "std_reward:", std_reward)
     env.close()
     if args.verbose > 0 and len(successes) > 0:
         print(f"Success rate: {100 * np.mean(successes):.2f}%")
@@ -312,4 +283,3 @@ def enjoy() -> None:  # noqa: C901
 
     if args.verbose > 0 and len(episode_lengths) > 0:
         print(f"Mean episode length: {np.mean(episode_lengths):.2f} +/- {np.std(episode_lengths):.2f}")
-
