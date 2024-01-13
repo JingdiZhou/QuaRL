@@ -12,8 +12,9 @@ set -e
 ########################################
 
 Optimizer=("SAM" "base")
-Learning_rate=(0.0001 0.0005 0.001 0.005 0.01 0.05 0.1 0.5)
-Rho=(0.01 0.02 0.05 0.1 0.2 0.5)
+#Learning_rate=(0.0001 0.0005 0.001 0.005 0.01 0.05 0.1 0.5)
+#Rho=(0.01 0.02 0.05 0.1 0.2 0.5)
+Rho=(0.01 0.05)
 echo "Grid search of Learning rate:[${Learning_rate[*]}]"
 echo "Grid search of rho:[${Rho[*]}]"
 
@@ -39,8 +40,8 @@ elif [ "$6" = "search_rho" ];then
         for ((i=1;i<=$4;i++)) # Test different random seeds, $5 can be set random number, but for fairness, it should be set big enough
           do
           echo "Test rho: $rho"
-          python train.py --algo $1 --env $2 --device cuda --optimize-choice $opt --quantize $3 -P --rho $rho  --track -n $5
-          ptq_all.sh $1 $2 "logs/{$1}/{$2}_{$3}bit_{$opt}_{$i}" $opt $i $rho 0 $opt
+#          python train.py --algo $1 --env $2 --device cuda --optimize-choice $opt --quantize $3 -P --rho $rho  --track -n $5
+          ptq_all.sh $1 $2 "logs/$1/$2_$3bit_"$opt"_$i" $opt $i $rho 0 $opt
         done
       done
     done
@@ -53,7 +54,7 @@ elif [ "$6" = "search_lr" ];then
         do
         echo "Test learning_rate: $lr"
         python train.py --algo $1 --env $2 --device cuda --optimize-choice $opt --quantize $3 -P --rho 0.05 -params learning_rate:$lr --track -n $5
-        ptq_all.sh $1 $2 "logs/{$1}/{$2}_{$3}bit_{$opt}_{$i}" $opt $i 0.05 $lr $opt
+        ptq_all.sh $1 $2 "logs/$1/$2_$3bit_"$opt"_$i" $opt $i 0.05 $lr $opt
       done
     done
   done
