@@ -114,7 +114,7 @@ def collate() -> None:  # noqa: C901
         if args.wandb_project_name:
             wandb_project_name = args.wandb_project_name
         else:
-            wandb_project_name = "PTQ" + args.algo + "_" + args.env
+            wandb_project_name = "PTQ" + "_" + args.algo + "_" + args.env
         tags = [*args.wandb_tags, f"v{sb3.__version__}"]
         run = wandb.init(
             name=run_name,
@@ -282,7 +282,7 @@ def collate() -> None:  # noqa: C901
                     deterministic=deterministic,
                 )
                 obs, reward, done, infos = env.step(action)
-                print(f"step:{i},reward:{reward},state:{done}")
+                print(f"step:{i},  reward:{reward},  state:{done}")
                 episode_start = done
 
                 if not args.no_render:

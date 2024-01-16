@@ -272,38 +272,64 @@ class SAC(OffPolicyAlgorithm):
             if self.optimize_choice == "HERO":
                 pass
             elif self.optimize_choice == "SAM":
-                pass
-                # self.critic.optimizer = SAM(self.policy.parameters(), th.optim.SGD, rho=self.rho, adaptive=adaptive,
-                #                             lr=self.lr_schedule(1), momentum=momentum, weight_decay=weight_decay)
-                # current_q_values_new = self.critic(replay_data.observations, replay_data.actions)
-                # critic_loss = 0.5 * sum(F.mse_loss(current_q, target_q_values) for current_q in current_q_values_new)
-                # assert isinstance(critic_loss, th.Tensor)  # for type checker
-                # critic_losses.append(critic_loss.item())  # type: ignore[union-attr]
-                #
-                # # first forward-backward step
-                # # Optimize the critic
-                # self.critic.optimizer.zero_grad()
-                # critic_loss.backward(retain_graph=True)
-                # self.critic.optimizer.first_step(zero_grad=True)
-                #
-                # # Compute actor loss
-                # # Alternative: actor_loss = th.mean(log_prob - qf1_pi)
-                # # Min over all critic networks
-                # q_values_pi = th.cat(self.critic(replay_data.observations, actions_pi), dim=1)
-                # min_qf_pi, _ = th.min(q_values_pi, dim=1, keepdim=True)
-                # actor_loss = (ent_coef * log_prob - min_qf_pi).mean()
-                # actor_losses.append(actor_loss.item())
-                #
-                # # Optimize the actor
-                # self.actor.optimizer.zero_grad()
-                # actor_loss.backward()
-                # self.actor.optimizer.step()
-                #
-                # # Update target networks
-                # if gradient_step % self.target_update_interval == 0:
-                #     polyak_update(self.critic.parameters(), self.critic_target.parameters(), self.tau)
-                #     # Copy running stats, see GH issue #996
-                #     polyak_update(self.batch_norm_stats, self.batch_norm_stats_target, 1.0)
+                if self.critic.share_features_extractor:
+                    critic_parameters = [param for name, param in self.critic.named_parameters() if
+                                         "features_extractor" not in name]
+                else:
+                    critic_parameters = list(self.critic.parameters())
+                self.critic.optimizer = SAM(critic_parameters, th.optim.SGD, rho=self.rho, adaptive=adaptive,
+                                            lr=self.lr_schedule(1),
+                                            momentum=momentum, weight_decay=weight_decay)
+                self.actor.optimizer = SAM(self.actor.parameters(), th.optim.SGD, rho=self.rho, adaptive=adaptive,
+                                            lr=self.lr_schedule(1),
+                                            momentum=momentum, weight_decay=weight_decay)
+                # First forward-backward step for critic
+                # Compute critic loss
+                critic_loss = 0.5 * sum(F.mse_loss(current_q, target_q_values) for current_q in current_q_values)
+                assert isinstance(critic_loss, th.Tensor)  # for type checker
+                critic_losses.append(critic_loss.item())  # type: ignore[union-attr]
+
+                # Optimize the critic
+                critic_loss.backward(retain_graph=True)
+                self.critic.optimizer.first_step(zero_grad=True)
+
+                # Second forward-backward step
+                # Compute critic loss
+                current_q_values_new = self.critic(replay_data.observations, replay_data.actions)
+                critic_loss_new = 0.5 * sum(F.mse_loss(current_q_new, target_q_values) for current_q_new in current_q_values_new)
+                assert isinstance(critic_loss_new, th.Tensor)  # for type checker
+
+                # Optimize the critic
+                critic_loss_new.backward()
+                self.critic.optimizer.second_step(zero_grad=True)
+
+                # First forward-backward step for actor
+                # Compute actor loss
+                q_values_pi = th.cat(self.critic(replay_data.observations, actions_pi), dim=1)
+                min_qf_pi, _ = th.min(q_values_pi, dim=1, keepdim=True)
+                actor_loss = (ent_coef * log_prob - min_qf_pi).mean()
+                actor_losses.append(actor_loss.item())
+
+                # Optimize the actor
+                actor_loss.backward(retain_graph=True)
+                self.actor.optimizer.first_step(zero_grad=True)
+
+                # Second forward-backward step
+                # Compute actor loss
+                q_values_pi_new = th.cat(self.critic(replay_data.observations, actions_pi), dim=1)
+                min_qf_pi_new, _ = th.min(q_values_pi_new, dim=1, keepdim=True)
+                actor_loss_new = (ent_coef * log_prob - min_qf_pi_new).mean()
+
+                # Optimize the actor
+                actor_loss_new.backward()
+                self.actor.optimizer.second_step(zero_grad=True)
+
+                # Update target networks
+                if gradient_step % self.target_update_interval == 0:
+                    polyak_update(self.critic.parameters(), self.critic_target.parameters(), self.tau)
+                    # Copy running stats, see GH issue #996
+                    polyak_update(self.batch_norm_stats, self.batch_norm_stats_target, 1.0)
+
             else:  # vanilla optimizer
                 # Compute critic loss
                 critic_loss = 0.5 * sum(F.mse_loss(current_q, target_q_values) for current_q in current_q_values)

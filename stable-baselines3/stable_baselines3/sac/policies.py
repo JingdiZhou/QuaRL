@@ -48,19 +48,20 @@ class Actor(BasePolicy):
     action_space: spaces.Box
 
     def __init__(
-        self,
-        observation_space: spaces.Space,
-        action_space: spaces.Box,
-        net_arch: List[int],
-        features_extractor: nn.Module,
-        features_dim: int,
-        activation_fn: Type[nn.Module] = nn.ReLU,
-        use_sde: bool = False,
-        log_std_init: float = -3,
-        full_std: bool = True,
-        use_expln: bool = False,
-        clip_mean: float = 2.0,
-        normalize_images: bool = True,
+            self,
+            observation_space: spaces.Space,
+            action_space: spaces.Box,
+            net_arch: List[int],
+            features_extractor: nn.Module,
+            features_dim: int,
+            activation_fn: Type[nn.Module] = nn.ReLU,
+            use_sde: bool = False,
+            log_std_init: float = -3,
+            full_std: bool = True,
+            use_expln: bool = False,
+            clip_mean: float = 2.0,
+            normalize_images: bool = True,
+            quantized: int = 32,
     ):
         super().__init__(
             observation_space,
@@ -80,10 +81,11 @@ class Actor(BasePolicy):
         self.use_expln = use_expln
         self.full_std = full_std
         self.clip_mean = clip_mean
+        self.q = quantized
 
         action_dim = get_action_dim(self.action_space)
-        latent_pi_net = create_mlp(features_dim, -1, net_arch, activation_fn) # return list[nn.Linear]
-        self.latent_pi = nn.Sequential(*latent_pi_net)  
+        latent_pi_net = create_mlp(features_dim, -1, net_arch, activation_fn)  # return list[nn.Linear]
+        self.latent_pi = nn.Sequential(*latent_pi_net)
         last_layer_dim = net_arch[-1] if len(net_arch) > 0 else features_dim
 
         if self.use_sde:
@@ -91,7 +93,7 @@ class Actor(BasePolicy):
                 action_dim, full_std=full_std, use_expln=use_expln, learn_features=True, squash_output=True
             )
             self.mu, self.log_std = self.action_dist.proba_distribution_net(
-                latent_dim=last_layer_dim, latent_sde_dim=last_layer_dim, log_std_init=log_std_init
+                quantized=self.q, latent_dim=last_layer_dim, latent_sde_dim=last_layer_dim, log_std_init=log_std_init
             )
             # Avoid numerical issues by limiting the mean of the Gaussian
             # to be in [-clip_mean, clip_mean]
@@ -212,24 +214,24 @@ class SACPolicy(BasePolicy):
     critic_target: ContinuousCritic
 
     def __init__(
-        self,
-        quantized: int,
-        observation_space: spaces.Space,
-        action_space: spaces.Box,
-        lr_schedule: Schedule,
-        net_arch: Optional[Union[List[int], Dict[str, List[int]]]] = None,
-        activation_fn: Type[nn.Module] = nn.ReLU,
-        use_sde: bool = False,
-        log_std_init: float = -3,
-        use_expln: bool = False,
-        clip_mean: float = 2.0,
-        features_extractor_class: Type[BaseFeaturesExtractor] = FlattenExtractor,
-        features_extractor_kwargs: Optional[Dict[str, Any]] = None,
-        normalize_images: bool = True,
-        optimizer_class: Type[th.optim.Optimizer] = th.optim.Adam,
-        optimizer_kwargs: Optional[Dict[str, Any]] = None,
-        n_critics: int = 2,
-        share_features_extractor: bool = False,
+            self,
+            quantized: int,
+            observation_space: spaces.Space,
+            action_space: spaces.Box,
+            lr_schedule: Schedule,
+            net_arch: Optional[Union[List[int], Dict[str, List[int]]]] = None,
+            activation_fn: Type[nn.Module] = nn.ReLU,
+            use_sde: bool = False,
+            log_std_init: float = -3,
+            use_expln: bool = False,
+            clip_mean: float = 2.0,
+            features_extractor_class: Type[BaseFeaturesExtractor] = FlattenExtractor,
+            features_extractor_kwargs: Optional[Dict[str, Any]] = None,
+            normalize_images: bool = True,
+            optimizer_class: Type[th.optim.Optimizer] = th.optim.Adam,
+            optimizer_kwargs: Optional[Dict[str, Any]] = None,
+            n_critics: int = 2,
+            share_features_extractor: bool = False,
     ):
         super().__init__(
             observation_space,
@@ -287,14 +289,15 @@ class SACPolicy(BasePolicy):
         )
 
         if self.share_features_extractor:
-            self.critic = self.make_critic(features_extractor=self.actor.features_extractor) # network
+            self.critic = self.make_critic(features_extractor=self.actor.features_extractor)  # network
             # Do not optimize the shared features extractor with the critic loss
             # otherwise, there are gradient computation issues
-            critic_parameters = [param for name, param in self.critic.named_parameters() if "features_extractor" not in name]
+            critic_parameters = [param for name, param in self.critic.named_parameters() if
+                                 "features_extractor" not in name]
         else:
             # Create a separate features extractor for the critic
             # this requires more memory and computation
-            self.critic = self.make_critic(features_extractor=None)  #network
+            self.critic = self.make_critic(features_extractor=None)  # network
             critic_parameters = list(self.critic.parameters())
 
         # Critic target should not share the features extractor with critic
@@ -397,23 +400,23 @@ class CnnPolicy(SACPolicy):
     """
 
     def __init__(
-        self,
-        observation_space: spaces.Space,
-        action_space: spaces.Box,
-        lr_schedule: Schedule,
-        net_arch: Optional[Union[List[int], Dict[str, List[int]]]] = None,
-        activation_fn: Type[nn.Module] = nn.ReLU,
-        use_sde: bool = False,
-        log_std_init: float = -3,
-        use_expln: bool = False,
-        clip_mean: float = 2.0,
-        features_extractor_class: Type[BaseFeaturesExtractor] = NatureCNN,
-        features_extractor_kwargs: Optional[Dict[str, Any]] = None,
-        normalize_images: bool = True,
-        optimizer_class: Type[th.optim.Optimizer] = th.optim.Adam,
-        optimizer_kwargs: Optional[Dict[str, Any]] = None,
-        n_critics: int = 2,
-        share_features_extractor: bool = False,
+            self,
+            observation_space: spaces.Space,
+            action_space: spaces.Box,
+            lr_schedule: Schedule,
+            net_arch: Optional[Union[List[int], Dict[str, List[int]]]] = None,
+            activation_fn: Type[nn.Module] = nn.ReLU,
+            use_sde: bool = False,
+            log_std_init: float = -3,
+            use_expln: bool = False,
+            clip_mean: float = 2.0,
+            features_extractor_class: Type[BaseFeaturesExtractor] = NatureCNN,
+            features_extractor_kwargs: Optional[Dict[str, Any]] = None,
+            normalize_images: bool = True,
+            optimizer_class: Type[th.optim.Optimizer] = th.optim.Adam,
+            optimizer_kwargs: Optional[Dict[str, Any]] = None,
+            n_critics: int = 2,
+            share_features_extractor: bool = False,
     ):
         super().__init__(
             observation_space,
@@ -463,23 +466,23 @@ class MultiInputPolicy(SACPolicy):
     """
 
     def __init__(
-        self,
-        observation_space: spaces.Space,
-        action_space: spaces.Box,
-        lr_schedule: Schedule,
-        net_arch: Optional[Union[List[int], Dict[str, List[int]]]] = None,
-        activation_fn: Type[nn.Module] = nn.ReLU,
-        use_sde: bool = False,
-        log_std_init: float = -3,
-        use_expln: bool = False,
-        clip_mean: float = 2.0,
-        features_extractor_class: Type[BaseFeaturesExtractor] = CombinedExtractor,
-        features_extractor_kwargs: Optional[Dict[str, Any]] = None,
-        normalize_images: bool = True,
-        optimizer_class: Type[th.optim.Optimizer] = th.optim.Adam,
-        optimizer_kwargs: Optional[Dict[str, Any]] = None,
-        n_critics: int = 2,
-        share_features_extractor: bool = False,
+            self,
+            observation_space: spaces.Space,
+            action_space: spaces.Box,
+            lr_schedule: Schedule,
+            net_arch: Optional[Union[List[int], Dict[str, List[int]]]] = None,
+            activation_fn: Type[nn.Module] = nn.ReLU,
+            use_sde: bool = False,
+            log_std_init: float = -3,
+            use_expln: bool = False,
+            clip_mean: float = 2.0,
+            features_extractor_class: Type[BaseFeaturesExtractor] = CombinedExtractor,
+            features_extractor_kwargs: Optional[Dict[str, Any]] = None,
+            normalize_images: bool = True,
+            optimizer_class: Type[th.optim.Optimizer] = th.optim.Adam,
+            optimizer_kwargs: Optional[Dict[str, Any]] = None,
+            n_critics: int = 2,
+            share_features_extractor: bool = False,
     ):
         super().__init__(
             observation_space,

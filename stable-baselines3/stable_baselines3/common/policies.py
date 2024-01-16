@@ -980,6 +980,7 @@ class ContinuousCritic(BaseModel):
         normalize_images: bool = True,
         n_critics: int = 2,
         share_features_extractor: bool = True,
+        # quantized: int = 32,
     ):
         super().__init__(
             observation_space,
@@ -990,6 +991,7 @@ class ContinuousCritic(BaseModel):
 
         action_dim = get_action_dim(self.action_space)
 
+        # self.q = quantized
         self.share_features_extractor = share_features_extractor
         self.n_critics = n_critics
         self.q_networks = []

@@ -3,11 +3,13 @@ from typing import Any, ClassVar, Dict, Optional, Type, TypeVar, Union
 
 import numpy as np
 import torch as th
+import wandb
 from gymnasium import spaces
 from torch.nn import functional as F
 
 from stable_baselines3.common.on_policy_algorithm import OnPolicyAlgorithm
-from stable_baselines3.common.policies import ActorCriticCnnPolicy, ActorCriticPolicy, BasePolicy, MultiInputActorCriticPolicy
+from stable_baselines3.common.policies import ActorCriticCnnPolicy, ActorCriticPolicy, BasePolicy, \
+    MultiInputActorCriticPolicy
 from stable_baselines3.common.type_aliases import GymEnv, MaybeCallback, Schedule
 from stable_baselines3.common.utils import explained_variance, get_schedule_fn
 
@@ -84,34 +86,34 @@ class PPO(OnPolicyAlgorithm):
     }
 
     def __init__(
-        self,
-        rho: float,
-        quantized: int,
-        policy: Union[str, Type[ActorCriticPolicy]],
-        env: Union[GymEnv, str],
-        learning_rate: Union[float, Schedule] = 3e-4,
-        n_steps: int = 2048,
-        batch_size: int = 64,
-        n_epochs: int = 10,
-        gamma: float = 0.99,
-        gae_lambda: float = 0.95,
-        clip_range: Union[float, Schedule] = 0.2,
-        clip_range_vf: Union[None, float, Schedule] = None,
-        normalize_advantage: bool = True,
-        ent_coef: float = 0.0,
-        vf_coef: float = 0.5,
-        max_grad_norm: float = 0.5,
-        use_sde: bool = False,
-        sde_sample_freq: int = -1,
-        target_kl: Optional[float] = None,
-        stats_window_size: int = 100,
-        tensorboard_log: Optional[str] = None,
-        policy_kwargs: Optional[Dict[str, Any]] = None,
-        verbose: int = 0,
-        seed: Optional[int] = None,
-        device: Union[th.device, str] = "auto",
-        _init_setup_model: bool = True,
-        optimize_choice: str = "base",
+            self,
+            rho: float,
+            quantized: int,
+            policy: Union[str, Type[ActorCriticPolicy]],
+            env: Union[GymEnv, str],
+            learning_rate: Union[float, Schedule] = 3e-4,
+            n_steps: int = 2048,
+            batch_size: int = 64,
+            n_epochs: int = 10,
+            gamma: float = 0.99,
+            gae_lambda: float = 0.95,
+            clip_range: Union[float, Schedule] = 0.2,
+            clip_range_vf: Union[None, float, Schedule] = None,
+            normalize_advantage: bool = True,
+            ent_coef: float = 0.0,
+            vf_coef: float = 0.5,
+            max_grad_norm: float = 0.5,
+            use_sde: bool = False,
+            sde_sample_freq: int = -1,
+            target_kl: Optional[float] = None,
+            stats_window_size: int = 100,
+            tensorboard_log: Optional[str] = None,
+            policy_kwargs: Optional[Dict[str, Any]] = None,
+            verbose: int = 0,
+            seed: Optional[int] = None,
+            device: Union[th.device, str] = "auto",
+            _init_setup_model: bool = True,
+            optimize_choice: str = "base",
     ):
         super().__init__(
             policy,
@@ -145,7 +147,7 @@ class PPO(OnPolicyAlgorithm):
         # because of the advantage normalization
         if normalize_advantage:
             assert (
-                batch_size > 1
+                    batch_size > 1
             ), "`batch_size` must be greater than 1. See https://github.com/DLR-RM/stable-baselines3/issues/440"
 
         if self.env is not None:
@@ -223,7 +225,8 @@ class PPO(OnPolicyAlgorithm):
                 if self.use_sde:
                     self.policy.reset_noise(self.batch_size)
 
-                values, log_prob, entropy = self.policy.evaluate_actions(rollout_data.observations, actions)  #this functionwill return the value of the input action
+                values, log_prob, entropy = self.policy.evaluate_actions(rollout_data.observations,
+                                                                         actions)  # this functionwill return the value of the input action
                 values = values.flatten()
                 # Normalize advantage
                 advantages = rollout_data.advantages
@@ -233,8 +236,6 @@ class PPO(OnPolicyAlgorithm):
 
                 # ratio between old and new policy, should be one at the first iteration
 
-
-                ###########SAM begin
                 if self.optimize_choice == "HERO":
                     ####SAM
                     self.policy.optimizer = SAM(self.policy.parameters(), th.optim.SGD, rho=self.rho, adaptive=adaptive,
@@ -337,7 +338,8 @@ class PPO(OnPolicyAlgorithm):
 
                     criterion_hero = th.nn.MSELoss()
                     hero_loss = 0.
-                    loss_grads_new = th.autograd.grad(loss_new, self.policy.mlp_extractor.parameters(), retain_graph=True,
+                    loss_grads_new = th.autograd.grad(loss_new, self.policy.mlp_extractor.parameters(),
+                                                      retain_graph=True,
                                                       create_graph=True)
                     loss_grads_copy = []
                     for index, grad in enumerate(loss_grads_new):
@@ -358,7 +360,8 @@ class PPO(OnPolicyAlgorithm):
                                     if grad != None and grad_copy != None:
                                         hero_loss += lambda_hero * criterion_hero(grad_copy, grad)
                     hero_loss.backward()
-                    for index_param, (param, grad) in enumerate(zip(self.policy.mlp_extractor.parameters(), loss_grads_copy)):
+                    for index_param, (param, grad) in enumerate(
+                            zip(self.policy.mlp_extractor.parameters(), loss_grads_copy)):
                         param.grad += grad
                     self.policy.optimizer.second_step(zero_grad=True)
 
@@ -505,14 +508,6 @@ class PPO(OnPolicyAlgorithm):
                     # Clip grad norm
                     th.nn.utils.clip_grad_norm_(self.policy.parameters(), self.max_grad_norm)
                     self.policy.optimizer.step()
-                ######SAM end####
-                
-                # # Optimization step
-                # self.policy.optimizer.zero_grad()
-                # loss.backward()
-                # # Clip grad norm
-                # th.nn.utils.clip_grad_norm_(self.policy.parameters(), self.max_grad_norm)
-                # self.policy.optimizer.step()
 
             self._n_updates += 1
             if not continue_training:
@@ -533,17 +528,22 @@ class PPO(OnPolicyAlgorithm):
 
         self.logger.record("train/n_updates", self._n_updates, exclude="tensorboard")
         self.logger.record("train/clip_range", clip_range)
+        wandb.log({"train/entropy_loss": np.mean(entropy_losses), "train/policy_gradient_loss": np.mean(pg_losses),
+                   "train/value_loss": np.mean(value_losses),
+                   "train/approx_kl": np.mean(approx_kl_divs), "train/clip_fraction": np.mean(clip_fractions),
+                   "train/loss": loss.item(), "train/explained_variance": explained_var,
+                   "train/clip_range": clip_range})
         if self.clip_range_vf is not None:
             self.logger.record("train/clip_range_vf", clip_range_vf)
 
     def learn(
-        self: SelfPPO,
-        total_timesteps: int,
-        callback: MaybeCallback = None,
-        log_interval: int = 1,
-        tb_log_name: str = "PPO",
-        reset_num_timesteps: bool = True,
-        progress_bar: bool = False,
+            self: SelfPPO,
+            total_timesteps: int,
+            callback: MaybeCallback = None,
+            log_interval: int = 1,
+            tb_log_name: str = "PPO",
+            reset_num_timesteps: bool = True,
+            progress_bar: bool = False,
     ) -> SelfPPO:
         return super().learn(
             total_timesteps=total_timesteps,

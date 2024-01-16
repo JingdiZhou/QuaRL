@@ -261,7 +261,7 @@ class ExperimentManager:
             # Release resources
             try:
                 from stable_baselines3.common.evaluation import evaluate_policy
-                mean_reward, std_reward = evaluate_policy(model, env, n_eval_episodes=100, render=False)
+                mean_reward, std_reward = evaluate_policy(model, env, n_eval_episodes=10, render=False)
                 model.env.close()
             except EOFError:
                 pass

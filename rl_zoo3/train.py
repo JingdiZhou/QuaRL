@@ -161,10 +161,8 @@ def params():
         "-tags", "--wandb-tags", type=str, default=[], nargs="+",
         help="Tags for wandb run, e.g.: -tags optimized pr-123"
     )
-
     args = parser.parse_args()
     return args
-
 
 def train(args) -> None:
     # Going through custom gym packages to let them register in the global registory

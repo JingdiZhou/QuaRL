@@ -227,7 +227,6 @@ if __name__ == "__main__":
                             data[key][param_key] = torch.tensor(data[key][param_key])
                         print("data type:", type(data[key][param_key]))
 
-    # save_path = 'quantized/{}/{}'.format(q, algo)
     save_path = 'quantized/{}/{}/{}'.format(q, algo, folder.split('_')[-1])
     os.makedirs(save_path, exist_ok=True)
     model.policy.load_state_dict(data['policy'])
