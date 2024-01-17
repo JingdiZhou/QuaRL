@@ -22,6 +22,7 @@ momentum = 0.95
 weight_decay = 5e-4
 lambda_hero = 1
 
+
 class DQN(OffPolicyAlgorithm):
     """
     Deep Q-Network (DQN)
@@ -79,37 +80,36 @@ class DQN(OffPolicyAlgorithm):
     q_net_target: QNetwork
     policy: DQNPolicy
 
-
     def __init__(
-        self,
-        rho: float,
-        quantized: int,
-        policy: Union[str, Type[DQNPolicy]],
-        env: Union[GymEnv, str],
-        learning_rate: Union[float, Schedule] = 1e-4,
-        buffer_size: int = 1_000_000,  # 1e6
-        learning_starts: int = 50000,
-        batch_size: int = 32,
-        tau: float = 1.0,
-        gamma: float = 0.99,
-        train_freq: Union[int, Tuple[int, str]] = 4,
-        gradient_steps: int = 1,
-        replay_buffer_class: Optional[Type[ReplayBuffer]] = None,
-        replay_buffer_kwargs: Optional[Dict[str, Any]] = None,
-        optimize_memory_usage: bool = False,
-        target_update_interval: int = 10000,
-        exploration_fraction: float = 0.1,
-        exploration_initial_eps: float = 1.0,
-        exploration_final_eps: float = 0.05,
-        max_grad_norm: float = 10,
-        stats_window_size: int = 100,
-        tensorboard_log: Optional[str] = None,
-        policy_kwargs: Optional[Dict[str, Any]] = None,
-        verbose: int = 0,
-        seed: Optional[int] = None,
-        device: Union[th.device, str] = "auto",
-        _init_setup_model: bool = True,
-        optimize_choice: str = "base",
+            self,
+            rho: float,
+            quantized: int,
+            policy: Union[str, Type[DQNPolicy]],
+            env: Union[GymEnv, str],
+            learning_rate: Union[float, Schedule] = 1e-4,
+            buffer_size: int = 1_000_000,  # 1e6
+            learning_starts: int = 50000,
+            batch_size: int = 32,
+            tau: float = 1.0,
+            gamma: float = 0.99,
+            train_freq: Union[int, Tuple[int, str]] = 4,
+            gradient_steps: int = 1,
+            replay_buffer_class: Optional[Type[ReplayBuffer]] = None,
+            replay_buffer_kwargs: Optional[Dict[str, Any]] = None,
+            optimize_memory_usage: bool = False,
+            target_update_interval: int = 10000,
+            exploration_fraction: float = 0.1,
+            exploration_initial_eps: float = 1.0,
+            exploration_final_eps: float = 0.05,
+            max_grad_norm: float = 10,
+            stats_window_size: int = 100,
+            tensorboard_log: Optional[str] = None,
+            policy_kwargs: Optional[Dict[str, Any]] = None,
+            verbose: int = 0,
+            seed: Optional[int] = None,
+            device: Union[th.device, str] = "auto",
+            _init_setup_model: bool = True,
+            optimize_choice: str = "base",
     ) -> None:
         super().__init__(
             quantized,
@@ -175,8 +175,8 @@ class DQN(OffPolicyAlgorithm):
                 )
 
     def _create_aliases(self) -> None:
-        self.q_net = self.policy.q_net # q_net is instanlized in DQNPolicy(dqn\policies)
-        self.q_net_target = self.policy.q_net_target #q_net_target is instanlized in DQNPolicy(dqn\policies)
+        self.q_net = self.policy.q_net  # q_net is instanlized in DQNPolicy(dqn\policies)
+        self.q_net_target = self.policy.q_net_target  # q_net_target is instanlized in DQNPolicy(dqn\policies)
 
     def _on_step(self) -> None:
         """
@@ -187,13 +187,13 @@ class DQN(OffPolicyAlgorithm):
         # Account for multiple environments
         # each call to step() corresponds to n_envs transitions
         if self._n_calls % max(self.target_update_interval // self.n_envs, 1) == 0:
-            polyak_update(self.q_net.parameters(), self.q_net_target.parameters(), self.tau)  #update target network
+            polyak_update(self.q_net.parameters(), self.q_net_target.parameters(), self.tau)  # update target network
             # Copy running stats, see GH issue #996
             polyak_update(self.batch_norm_stats, self.batch_norm_stats_target, 1.0)
 
         self.exploration_rate = self.exploration_schedule(self._current_progress_remaining)
         self.logger.record("rollout/exploration_rate", self.exploration_rate)
-        wandb.log({"train/exploration_rate":self.exploration_rate})
+        wandb.log({"train/exploration_rate": self.exploration_rate})
 
     def train(self, gradient_steps: int, batch_size: int = 100) -> None:
         # Switch to train mode (this affects batch norm / dropout)
@@ -207,11 +207,12 @@ class DQN(OffPolicyAlgorithm):
             # replay_data contains batch_size data
             with th.no_grad():
                 # Compute the next Q-values using the target network
-                next_q_values = self.q_net_target(replay_data.next_observations)   # the size of next_q_values is batch_size
+                next_q_values = self.q_net_target(
+                    replay_data.next_observations)  # the size of next_q_values is batch_size
                 # Follow greedy policy: use the one with the highest value
-                next_q_values, _ = next_q_values.max(dim=1)  #get the biggest Q value of the next value
+                next_q_values, _ = next_q_values.max(dim=1)  # get the biggest Q value of the next value
                 # Avoid potential broadcast issue
-                next_q_values = next_q_values.reshape(-1, 1)  #reshpe to one column
+                next_q_values = next_q_values.reshape(-1, 1)  # reshpe to one column
                 # 1-step TD target
                 target_q_values = replay_data.rewards + (1 - replay_data.dones) * self.gamma * next_q_values
 
@@ -219,53 +220,44 @@ class DQN(OffPolicyAlgorithm):
             current_q_values = self.q_net(replay_data.observations)
 
             # Retrieve the q-values for the actions from the replay buffer
-            current_q_values = th.gather(current_q_values, dim=1, index=replay_data.actions.long()) # get the q_values of the corresponding actions because every step (S,A,R,S,A) is fixed
+            current_q_values = th.gather(current_q_values, dim=1,
+                                         index=replay_data.actions.long())  # get the q_values of the corresponding actions because every step (S,A,R,S,A) is fixed
 
             if self.optimize_choice == "HERO":
-                self.policy.optimizer = SAM(self.policy.parameters(), th.optim.SGD, rho=self.rho, adaptive=adaptive, lr=self.lr_schedule(1),
-                                     momentum=momentum, weight_decay=weight_decay)
-                loss = F.smooth_l1_loss(current_q_values,target_q_values)
+                self.policy.optimizer = SAM(self.policy.parameters(), th.optim.SGD, rho=self.rho, adaptive=adaptive,
+                                            lr=self.lr_schedule(1),
+                                            momentum=momentum, weight_decay=weight_decay)
+                loss = F.smooth_l1_loss(current_q_values, target_q_values)
                 loss.backward(retain_graph=True)
-                th.nn.utils.clip_grad_norm_(self.policy.parameters(), self.max_grad_norm)
-                loss_grads=[]
+                # th.nn.utils.clip_grad_norm_(self.policy.parameters(), self.max_grad_norm)
+                loss_grads = []
 
                 for index_param, param in enumerate(self.policy.parameters()):
                     loss_grads.append(param.grad.data.clone().detach())
 
-                
                 self.policy.optimizer.first_step(zero_grad=True)
 
-                #second forward-backward step
+                # second forward-backward step
                 current_q_values_new = self.q_net(replay_data.observations)
-                with th.no_grad():
-                    # Compute the next Q-values using the target network
-                    next_q_values = self.q_net_target(
-                        replay_data.next_observations)  # the size of next_q_values is batch_size
-                    # Follow greedy policy: use the one with the highest value
-                    next_q_values, _ = next_q_values.max(dim=1)  # get the biggest Q value of the next value
-                    # Avoid potential broadcast issue
-                    next_q_values = next_q_values.reshape(-1, 1)  # reshpe to one column
-                    # 1-step TD target
-                    target_q_values = replay_data.rewards + (1 - replay_data.dones) * self.gamma * next_q_values
-                loss_new = F.smooth_l1_loss(current_q_values_new,target_q_values)
+                loss_new = F.smooth_l1_loss(current_q_values_new, target_q_values)
                 criterion_hero = th.nn.MSELoss()
                 hero_loss = 0.
-                loss_grads_new = th.autograd.grad(loss_new, self.policy.parameters(), retain_graph=True, create_graph=True)
+                loss_grads_new = th.autograd.grad(loss_new, self.policy.parameters(), retain_graph=True,
+                                                  create_graph=True)
                 loss_grads_copy = []
                 for index, grad in enumerate(loss_grads_new):
                     loss_grads_copy.append(grad.data.clone().detach())
 
                 # compute the Hessian-related loss
-
                 for index_param, (name, param) in enumerate(self.policy.named_parameters()):
-                        if 'bias' not in name and 'bn' not in name:
-                            for index, (grad, grad_copy) in enumerate(zip(loss_grads, loss_grads_new)):
-                                if index_param == index:
-                                    if grad != None and grad_copy != None:
-                                        hero_loss += lambda_hero * criterion_hero(grad_copy, grad)
+                    if 'bias' not in name and 'bn' not in name:
+                        for index, (grad, grad_copy) in enumerate(zip(loss_grads, loss_grads_new)):
+                            if index_param == index:
+                                if grad != None and grad_copy != None:
+                                    hero_loss += lambda_hero * criterion_hero(grad_copy, grad)
                 hero_loss.backward()
                 for index_param, (param, grad) in enumerate(zip(self.policy.parameters(), loss_grads_copy)):
-                        param.grad += grad
+                    param.grad += grad
                 self.policy.optimizer.second_step(zero_grad=True)
 
             elif self.optimize_choice == "SAM":
@@ -278,7 +270,7 @@ class DQN(OffPolicyAlgorithm):
                 losses.append(loss.item())
                 loss.backward(retain_graph=True)
                 # Clip gradient norm, to avoid gradient explosion
-                #th.nn.utils.clip_grad_norm_(self.policy.parameters(), self.max_grad_norm)
+                # th.nn.utils.clip_grad_norm_(self.policy.parameters(), self.max_grad_norm)
                 self.policy.optimizer.first_step(zero_grad=True)
 
                 # second forward-backward step
@@ -288,11 +280,11 @@ class DQN(OffPolicyAlgorithm):
                 current_q_values_new = th.gather(current_q_values_new, dim=1, index=replay_data.actions.long())
 
                 F.smooth_l1_loss(current_q_values_new, target_q_values).backward()
-                #th.nn.utils.clip_grad_norm_(self.policy.parameters(), self.max_grad_norm)
+                # th.nn.utils.clip_grad_norm_(self.policy.parameters(), self.max_grad_norm)
                 self.policy.optimizer.second_step(zero_grad=True)
 
-            else: #base(vanilia)
-                #original backpropagation (originate from stable baselines3)
+            else:  # base(vanilia)
+                # original backpropagation (originate from stable baselines3)
                 # Compute Huber loss (less sensitive to outliers)S
                 loss = F.smooth_l1_loss(current_q_values, target_q_values)
                 losses.append(loss.item())
@@ -301,7 +293,7 @@ class DQN(OffPolicyAlgorithm):
                 self.policy.optimizer.zero_grad()
                 loss.backward()
                 # Clip gradient norm, to avoid gradient explosion
-                th.nn.utils.clip_grad_norm_(self.policy.parameters(), self.max_grad_norm) #多了下划线一般都是表示直接在原Tensor上进行操作
+                th.nn.utils.clip_grad_norm_(self.policy.parameters(), self.max_grad_norm)  # 多了下划线一般都是表示直接在原Tensor上进行操作
                 self.policy.optimizer.step()
 
         # Increase update counter
@@ -309,14 +301,14 @@ class DQN(OffPolicyAlgorithm):
 
         self.logger.record("train/n_updates", self._n_updates, exclude="tensorboard")
         self.logger.record("train/loss", np.mean(losses))
-        wandb.log({"train/loss":np.mean(losses)})
+        wandb.log({"train/loss": np.mean(losses)})
 
     def predict(
-        self,
-        observation: Union[np.ndarray, Dict[str, np.ndarray]],
-        state: Optional[Tuple[np.ndarray, ...]] = None,
-        episode_start: Optional[np.ndarray] = None,
-        deterministic: bool = False,
+            self,
+            observation: Union[np.ndarray, Dict[str, np.ndarray]],
+            state: Optional[Tuple[np.ndarray, ...]] = None,
+            episode_start: Optional[np.ndarray] = None,
+            deterministic: bool = False,
     ) -> Tuple[np.ndarray, Optional[Tuple[np.ndarray, ...]]]:
         """
         Overrides the base_class predict function to include epsilon-greedy exploration.
@@ -342,13 +334,13 @@ class DQN(OffPolicyAlgorithm):
         return action, state
 
     def learn(
-        self: SelfDQN,
-        total_timesteps: int,
-        callback: MaybeCallback = None,
-        log_interval: int = 4,
-        tb_log_name: str = "DQN",
-        reset_num_timesteps: bool = True,
-        progress_bar: bool = False,
+            self: SelfDQN,
+            total_timesteps: int,
+            callback: MaybeCallback = None,
+            log_interval: int = 4,
+            tb_log_name: str = "DQN",
+            reset_num_timesteps: bool = True,
+            progress_bar: bool = False,
     ) -> SelfDQN:
         return super().learn(
             total_timesteps=total_timesteps,

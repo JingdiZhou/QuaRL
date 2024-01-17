@@ -348,13 +348,7 @@ class PPO(OnPolicyAlgorithm):
                     # compute the Hessian-related loss
 
                     for index_param, (name, param) in enumerate(self.policy.mlp_extractor.named_parameters()):
-                        # if args.arch.startswith('vgg'):
-                        # if 'bias' not in name and 'bn' not in name and (index_param % 4) != 2:
-                        #     for index, (grad, grad_copy) in enumerate(zip(loss_grads, loss_grads_new)):
-                        #         if index_param == index:
-                        #             if grad != None and grad_copy != None:
-                        #                 hero_loss += lambda_hero * criterion_hero(grad_copy, grad)
-                        if 'bias' not in name and 'bn' not in name:
+                        if 'bias' not in name and 'bn' not in name and (index_param % 4) != 2:
                             for index, (grad, grad_copy) in enumerate(zip(loss_grads, loss_grads_new)):
                                 if index_param == index:
                                     if grad != None and grad_copy != None:

@@ -179,7 +179,64 @@ class A2C(OnPolicyAlgorithm):
             loss = policy_loss + self.ent_coef * entropy_loss + self.vf_coef * value_loss
             
             if self.optimize_choice == "HERO":
-                pass
+                self.policy.optimizer = SAM(self.policy.parameters(), th.optim.SGD, rho=self.rho, adaptive=adaptive,
+                                            lr=self.lr_schedule(1),
+                                            momentum=momentum, weight_decay=weight_decay)
+                loss.backward(retain_graph=True)
+                loss_grads = []
+
+                for index_param, param in enumerate(self.policy.parameters()):
+                    loss_grads.append(param.grad.data.clone().detach())
+
+                self.policy.optimizer.first_step(zero_grad=True)
+
+                # compute the new loss
+                if isinstance(self.action_space, spaces.Discrete):
+                    # Convert discrete action from float to long
+                    actions = actions.long().flatten()
+
+                values_new, log_prob_new, entropy_new = self.policy.evaluate_actions(rollout_data.observations, actions)
+                values_new = values_new.flatten()
+
+                # Normalize advantage (not present in the original implementation)
+                advantages_new = rollout_data.advantages
+                if self.normalize_advantage:
+                    advantages_new = (advantages_new - advantages_new.mean()) / (advantages_new.std() + 1e-8)
+
+                # Policy gradient loss
+                policy_loss_new = -(advantages_new * log_prob_new).mean()
+
+                # Value loss using the TD(gae_lambda) target
+                value_loss_new = F.mse_loss(rollout_data.returns, values_new)
+
+                # Entropy loss favor exploration
+                if entropy_new is None:
+                    # Approximate entropy when no analytical form
+                    entropy_loss_new = -th.mean(-log_prob_new)
+                else:
+                    entropy_loss_new = -th.mean(entropy_new)
+
+                loss_new = policy_loss_new + self.ent_coef * entropy_loss_new + self.vf_coef * value_loss_new
+                criterion_hero = th.nn.MSELoss()
+                hero_loss = 0.
+                loss_grads_new = th.autograd.grad(loss_new, self.policy.parameters(), retain_graph=True,
+                                                  create_graph=True)
+                loss_grads_copy = []
+                for index, grad in enumerate(loss_grads_new):
+                    loss_grads_copy.append(grad.data.clone().detach())
+
+                # compute the Hessian-related loss
+                for index_param, (name, param) in enumerate(self.policy.named_parameters()):
+                    if 'bias' not in name and 'bn' not in name:
+                        for index, (grad, grad_copy) in enumerate(zip(loss_grads, loss_grads_new)):
+                            if index_param == index:
+                                if grad != None and grad_copy != None:
+                                    hero_loss += lambda_hero * criterion_hero(grad_copy, grad)
+                hero_loss.backward()
+                for index_param, (param, grad) in enumerate(zip(self.policy.parameters(), loss_grads_copy)):
+                    param.grad += grad
+                self.policy.optimizer.second_step(zero_grad=True)
+
             elif self.optimize_choice == "SAM":
                 self.policy.optimizer = SAM(self.policy.parameters(), th.optim.SGD, rho=self.rho, adaptive=adaptive,
                                            lr=self.lr_schedule(1),

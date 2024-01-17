@@ -164,6 +164,7 @@ def params():
     args = parser.parse_args()
     return args
 
+
 def train(args) -> None:
     # Going through custom gym packages to let them register in the global registory
     for env_module in args.gym_packages:

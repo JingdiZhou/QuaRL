@@ -28,15 +28,11 @@ pip install -e .
 ```sh
 bash auto_train.sh a2c 32 20 1000000 search_all
 # $1 is the name of algorithm
-# $2 is the name of environment
-# $3 is the set of quantization bit(QAT), using 32 bit means no QAT
-# $4 is the test times(seeds number)
-# $5 is timestep for training
-# $6 is the choice of training, search all lr and rho, search lr , search rho
+# $2 is the set of quantization bit(QAT), using 32 bit means no QAT
+# $3 is the test times(seeds number)
+# $4 is timestep for training
+# $5 is the choice of training, search all lr and rho, search lr , search rho
 ```
-### Grid search using wandb.sweep
-...updating
-
 
 ### Train model from scratch(QAT)
 ```sh
