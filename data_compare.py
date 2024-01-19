@@ -23,15 +23,17 @@ def params():
 
 
 def main():
-    args = params()
+    # args = params()
     api = wandb.Api()
     runs_data = {}
-    step = 0
+    choice = 0
+    step = [1, 2, 3, 4, 5, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32]
 
     # if args.wandb_project_name:
-    entity, project = "Qorl", "sac_MountainCarContinuous-v0"  # args.wandb_project_name
+    entity, project = "Qorl", "PTQ_a2c_CartPole-v1"  # args.wandb_project_name
 
-    if args.wandb_plot_chioce == "train":
+    # if args.wandb_plot_chioce == "train":
+    if choice:
         runs = api.runs(entity + '/' + project)
         for run in runs:
             print(run.name)
@@ -63,9 +65,44 @@ def main():
         # sns.lineplot(x='step',y='reward',data=df)
         # plt.show()
     else:
+
         runs = api.runs(entity + '/' + project)
+        num = 0
+        sns.set_theme(style="darkgrid")
         for run in runs:
-            pass
+            num += 1
+            if num == 1:
+                if SuggestLR in run.name:  # using Suggested LR
+                    rho = ''.join(re.findall(r"\d+\.\d+", run.name.split("_")[5]))
+                    lr = SuggestLR
+                    optimizer = run.name.split("_")[3]
+                else:
+                    lr = ''.join(re.findall(r"\d+\.\d+", run.name.split("_")[4]))
+                    rho = ''.join(re.findall(r"\d+\.\d+", run.name.split("_")[5]))
+                    optimizer = run.name.split("_")[3]
+                runs_data[f"{lr}_{rho}_{optimizer}_ptq_reward"] = []
+                history = run.scan_history(keys=['PTQ/reward'])
+                ptq_reward = [row['PTQ/reward'] for row in history]
+                runs_data[f"{lr}_{rho}_{optimizer}_ptq_reward"].append(np.array(ptq_reward))
+                print(1111)
+            elif num == 2 or num ==3 or num ==4 or num ==5:
+                if SuggestLR in run.name:  # using Suggested LR
+                    rho = ''.join(re.findall(r"\d+\.\d+", run.name.split("_")[5]))
+                    lr = SuggestLR
+                    optimizer = run.name.split("_")[3]
+                else:
+                    lr = ''.join(re.findall(r"\d+\.\d+", run.name.split("_")[4]))
+                    rho = ''.join(re.findall(r"\d+\.\d+", run.name.split("_")[5]))
+                    optimizer = run.name.split("_")[3]
+                history = run.scan_history(keys=['PTQ/reward'])
+                ptq_reward = [row['PTQ/reward'] for row in history]
+                runs_data[f"{lr}_{rho}_{optimizer}_ptq_reward"].append(np.array(ptq_reward))
+
+        # visualization
+        for key in runs_data.keys():
+            ptq_value = np.mean(np.array(runs_data[key]), axis=0)
+            sns.lineplot(ptq_value)
+        plt.show()
 
 
 if __name__ == "__main__":

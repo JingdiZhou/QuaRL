@@ -21,6 +21,8 @@ from rl_zoo3.utils import ALGOS, StoreDict
 
 def params():
     parser = argparse.ArgumentParser()
+    parser.add_argument('--lambda_hero', default=1, type=float,
+                        metavar='lambda', help='hero regularization strength')
     parser.add_argument("--quantized", help="Quantization bits", default=32, type=int)
     parser.add_argument('--rho', default=0.05, type=float, help='rho of SAM')
     parser.add_argument("--optimize-choice", type=str, default="base", choices=["base", "HERO", "SAM"])
@@ -234,8 +236,8 @@ def train(args) -> None:
         args.tensorboard_log = f"runs/{run_name}"
     exp_manager = ExperimentManager(
         args,
+        args.lambda_hero,
         args.rho,
-        # wandb.config.rho,
         args.optimize_choice,
         args.quantized,
         args.algo,

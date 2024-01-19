@@ -66,6 +66,7 @@ class ExperimentManager:
     def __init__(
             self,
             args: argparse.Namespace,
+            lambda_hero: float,
             rho: float,
             optimize_choice: str,
             quantized: int,  # quantized hyperparameters
@@ -105,6 +106,7 @@ class ExperimentManager:
             show_progress: bool = False,
     ):
         super().__init__()
+        self.lambda_hero = lambda_hero
         self.rho = rho
         self.q = quantized
         self.optimize_choice = optimize_choice
@@ -217,6 +219,7 @@ class ExperimentManager:
         else:
             # Train an agent from scratch
             model = ALGOS[self.algo](
+                lambda_hero=self.lambda_hero,
                 rho=self.rho,
                 quantized=self.q,
                 env=env,

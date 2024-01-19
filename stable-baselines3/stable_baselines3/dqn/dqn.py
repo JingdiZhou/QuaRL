@@ -20,7 +20,6 @@ SelfDQN = TypeVar("SelfDQN", bound="DQN")
 adaptive = True
 momentum = 0.95
 weight_decay = 5e-4
-lambda_hero = 1
 
 
 class DQN(OffPolicyAlgorithm):
@@ -82,6 +81,7 @@ class DQN(OffPolicyAlgorithm):
 
     def __init__(
             self,
+            lambda_hero: float,
             rho: float,
             quantized: int,
             policy: Union[str, Type[DQNPolicy]],
@@ -137,6 +137,7 @@ class DQN(OffPolicyAlgorithm):
             supported_action_spaces=(spaces.Discrete,),
             support_multi_env=True,
         )
+        self.lambda_hero = lambda_hero
         self.rho = rho
         self.optimize_choice = optimize_choice
 
@@ -254,7 +255,7 @@ class DQN(OffPolicyAlgorithm):
                         for index, (grad, grad_copy) in enumerate(zip(loss_grads, loss_grads_new)):
                             if index_param == index:
                                 if grad != None and grad_copy != None:
-                                    hero_loss += lambda_hero * criterion_hero(grad_copy, grad)
+                                    hero_loss += self.lambda_hero * criterion_hero(grad_copy, grad)
                 hero_loss.backward()
                 for index_param, (param, grad) in enumerate(zip(self.policy.parameters(), loss_grads_copy)):
                     param.grad += grad

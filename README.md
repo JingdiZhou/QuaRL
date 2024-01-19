@@ -24,14 +24,14 @@ pip install -e .
 -params # use the parameters provided by user(not from rl_baseline3_zoo). e.g.-params learning_rate:0.01 buffer_size:256
 --track # using wandb to monitor the training
 ```
-## Quick start to train(search lr and rho)
+## Quick start to train(search lr, rho and lambda_hero)
 ```sh
 bash auto_train.sh a2c 32 20 1000000 search_all
 # $1 is the name of algorithm
 # $2 is the set of quantization bit(QAT), using 32 bit means no QAT
 # $3 is the test times(seeds number)
 # $4 is timestep for training
-# $5 is the choice of training, search all lr and rho, search lr , search rho
+# $5 is the choice of training, search all lr and rho, search lr , search rho, search lambda_hero
 ```
 
 ### Train model from scratch(QAT)

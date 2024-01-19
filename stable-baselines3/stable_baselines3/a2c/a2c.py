@@ -6,7 +6,8 @@ from gymnasium import spaces
 from torch.nn import functional as F
 
 from stable_baselines3.common.on_policy_algorithm import OnPolicyAlgorithm
-from stable_baselines3.common.policies import ActorCriticCnnPolicy, ActorCriticPolicy, BasePolicy, MultiInputActorCriticPolicy
+from stable_baselines3.common.policies import ActorCriticCnnPolicy, ActorCriticPolicy, BasePolicy, \
+    MultiInputActorCriticPolicy
 from stable_baselines3.common.type_aliases import GymEnv, MaybeCallback, Schedule
 from stable_baselines3.common.utils import explained_variance
 from HERO.sam import SAM
@@ -16,7 +17,7 @@ SelfA2C = TypeVar("SelfA2C", bound="A2C")
 adaptive = True
 momentum = 0.9
 weight_decay = 5e-4
-lambda_hero = 1
+
 
 class A2C(OnPolicyAlgorithm):
     """
@@ -69,31 +70,32 @@ class A2C(OnPolicyAlgorithm):
     }
 
     def __init__(
-        self,
-        rho: float,
-        quantized: int,
-        policy: Union[str, Type[ActorCriticPolicy]],
-        env: Union[GymEnv, str],
-        learning_rate: Union[float, Schedule] = 7e-4,
-        n_steps: int = 5,
-        gamma: float = 0.99,
-        gae_lambda: float = 1.0,
-        ent_coef: float = 0.0,
-        vf_coef: float = 0.5,
-        max_grad_norm: float = 0.5,
-        rms_prop_eps: float = 1e-5,
-        use_rms_prop: bool = True,
-        use_sde: bool = False,
-        sde_sample_freq: int = -1,
-        normalize_advantage: bool = False,
-        stats_window_size: int = 100,
-        tensorboard_log: Optional[str] = None,
-        policy_kwargs: Optional[Dict[str, Any]] = None,
-        verbose: int = 0,
-        seed: Optional[int] = None,
-        device: Union[th.device, str] = "auto",
-        _init_setup_model: bool = True,
-        optimize_choice: str = "base",
+            self,
+            lambda_hero: float,
+            rho: float,
+            quantized: int,
+            policy: Union[str, Type[ActorCriticPolicy]],
+            env: Union[GymEnv, str],
+            learning_rate: Union[float, Schedule] = 7e-4,
+            n_steps: int = 5,
+            gamma: float = 0.99,
+            gae_lambda: float = 1.0,
+            ent_coef: float = 0.0,
+            vf_coef: float = 0.5,
+            max_grad_norm: float = 0.5,
+            rms_prop_eps: float = 1e-5,
+            use_rms_prop: bool = True,
+            use_sde: bool = False,
+            sde_sample_freq: int = -1,
+            normalize_advantage: bool = False,
+            stats_window_size: int = 100,
+            tensorboard_log: Optional[str] = None,
+            policy_kwargs: Optional[Dict[str, Any]] = None,
+            verbose: int = 0,
+            seed: Optional[int] = None,
+            device: Union[th.device, str] = "auto",
+            _init_setup_model: bool = True,
+            optimize_choice: str = "base",
     ):
         super().__init__(
             policy,
@@ -123,6 +125,7 @@ class A2C(OnPolicyAlgorithm):
             quantized=quantized,
 
         )
+        self.lambda_hero = lambda_hero
         self.rho = rho
         self.q = quantized
         self.optimize_choice = optimize_choice
@@ -177,7 +180,7 @@ class A2C(OnPolicyAlgorithm):
                 entropy_loss = -th.mean(entropy)
 
             loss = policy_loss + self.ent_coef * entropy_loss + self.vf_coef * value_loss
-            
+
             if self.optimize_choice == "HERO":
                 self.policy.optimizer = SAM(self.policy.parameters(), th.optim.SGD, rho=self.rho, adaptive=adaptive,
                                             lr=self.lr_schedule(1),
@@ -231,7 +234,7 @@ class A2C(OnPolicyAlgorithm):
                         for index, (grad, grad_copy) in enumerate(zip(loss_grads, loss_grads_new)):
                             if index_param == index:
                                 if grad != None and grad_copy != None:
-                                    hero_loss += lambda_hero * criterion_hero(grad_copy, grad)
+                                    hero_loss += self.lambda_hero * criterion_hero(grad_copy, grad)
                 hero_loss.backward()
                 for index_param, (param, grad) in enumerate(zip(self.policy.parameters(), loss_grads_copy)):
                     param.grad += grad
@@ -239,8 +242,8 @@ class A2C(OnPolicyAlgorithm):
 
             elif self.optimize_choice == "SAM":
                 self.policy.optimizer = SAM(self.policy.parameters(), th.optim.SGD, rho=self.rho, adaptive=adaptive,
-                                           lr=self.lr_schedule(1),
-                                           momentum=momentum, weight_decay=weight_decay)
+                                            lr=self.lr_schedule(1),
+                                            momentum=momentum, weight_decay=weight_decay)
                 loss.backward(retain_graph=True)
                 self.policy.optimizer.first_step(zero_grad=True)
 
@@ -289,18 +292,19 @@ class A2C(OnPolicyAlgorithm):
         self.logger.record("train/entropy_loss", entropy_loss.item())
         self.logger.record("train/policy_loss", policy_loss.item())
         self.logger.record("train/value_loss", value_loss.item())
-        wandb.log({"train/entropy_loss": entropy_loss.item(), "train/policy_loss": policy_loss.item(),"train/value_loss": value_loss.item()})
+        wandb.log({"train/entropy_loss": entropy_loss.item(), "train/policy_loss": policy_loss.item(),
+                   "train/value_loss": value_loss.item()})
         if hasattr(self.policy, "log_std"):
             self.logger.record("train/std", th.exp(self.policy.log_std).mean().item())
 
     def learn(
-        self: SelfA2C,
-        total_timesteps: int,
-        callback: MaybeCallback = None,
-        log_interval: int = 100,
-        tb_log_name: str = "A2C",
-        reset_num_timesteps: bool = True,
-        progress_bar: bool = False,
+            self: SelfA2C,
+            total_timesteps: int,
+            callback: MaybeCallback = None,
+            log_interval: int = 100,
+            tb_log_name: str = "A2C",
+            reset_num_timesteps: bool = True,
+            progress_bar: bool = False,
     ) -> SelfA2C:
         return super().learn(
             total_timesteps=total_timesteps,

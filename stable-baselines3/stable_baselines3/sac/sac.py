@@ -20,7 +20,6 @@ SelfSAC = TypeVar("SelfSAC", bound="SAC")
 adaptive = True
 momentum = 0.95
 weight_decay = 5e-4
-lambda_hero = 1
 
 class SAC(OffPolicyAlgorithm):
     """
@@ -95,6 +94,7 @@ class SAC(OffPolicyAlgorithm):
 
     def __init__(
             self,
+            lambda_hero: float,
             rho: float,
             quantized: int,
             policy: Union[str, Type[SACPolicy]],
@@ -154,6 +154,7 @@ class SAC(OffPolicyAlgorithm):
             supported_action_spaces=(spaces.Box,),
             support_multi_env=True
         )
+        self.lambda_hero = lambda_hero
         self.rho = rho
         self.q = quantized
         self.optimize_choice = optimize_choice
