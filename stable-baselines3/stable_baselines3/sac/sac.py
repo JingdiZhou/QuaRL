@@ -271,7 +271,108 @@ class SAC(OffPolicyAlgorithm):
             current_q_values = self.critic(replay_data.observations, replay_data.actions)
 
             if self.optimize_choice == "HERO":
-                pass
+                if self.critic.share_features_extractor:
+                    critic_parameters = [param for name, param in self.critic.named_parameters() if
+                                         "features_extractor" not in name]
+                else:
+                    critic_parameters = list(self.critic.parameters())
+
+                self.critic.optimizer = SAM(critic_parameters, th.optim.SGD, rho=self.rho, adaptive=adaptive,
+                                            lr=self.lr_schedule(1),
+                                            momentum=momentum, weight_decay=weight_decay)
+                self.actor.optimizer = SAM(self.actor.parameters(), th.optim.SGD, rho=self.rho, adaptive=adaptive,
+                                           lr=self.lr_schedule(1),
+                                           momentum=momentum, weight_decay=weight_decay)
+                # First forward-backward step for critic
+                # Compute critic loss
+                critic_loss = 0.5 * sum(F.mse_loss(current_q, target_q_values) for current_q in current_q_values)
+                assert isinstance(critic_loss, th.Tensor)  # for type checker
+                critic_losses.append(critic_loss.item())  # type: ignore[union-attr]
+                loss_grads_critic = []
+
+                # Optimize the critic
+                critic_loss.backward(retain_graph=True)
+
+                for index_param, param in enumerate(critic_parameters):
+                    loss_grads_critic.append(param.grad.data.clone().detach())
+
+                self.critic.optimizer.first_step(zero_grad=True)
+
+                # Second forward-backward step
+                # Compute critic loss
+                current_q_values_new = self.critic(replay_data.observations, replay_data.actions)
+                critic_loss_new = 0.5 * sum(
+                    F.mse_loss(current_q_new, target_q_values) for current_q_new in current_q_values_new)
+                assert isinstance(critic_loss_new, th.Tensor)  # for type checker
+                criterion_hero_critic = th.nn.MSELoss()
+                hero_loss_critic = 0.
+                loss_grads_critic_new = th.autograd.grad(critic_loss_new, critic_parameters, retain_graph=True,
+                                                         create_graph=True)
+                loss_grads_copy_critic = []
+                for index, grad in enumerate(loss_grads_critic_new):
+                    loss_grads_copy_critic.append(grad.data.clone().detach())
+
+                # Optimize the critic
+                # compute the Hessian-related loss
+                for index_param, (name, param) in enumerate(self.critic.named_parameters()):
+                    if 'bias' not in name and 'bn' not in name:
+                        for index, (grad, grad_copy) in enumerate(zip(loss_grads_critic, loss_grads_critic_new)):
+                            if index_param == index:
+                                if grad != None and grad_copy != None:
+                                    hero_loss_critic += self.lambda_hero * criterion_hero_critic(grad_copy, grad)
+                hero_loss_critic.backward()
+                for index_param, (param, grad) in enumerate(zip(self.critic.parameters(), loss_grads_copy_critic)):
+                    param.grad += grad
+                self.critic.optimizer.second_step(zero_grad=True)
+
+                # First forward-backward step for actor
+                # Compute actor loss
+                q_values_pi = th.cat(self.critic(replay_data.observations, actions_pi), dim=1)
+                min_qf_pi, _ = th.min(q_values_pi, dim=1, keepdim=True)
+                actor_loss = (ent_coef * log_prob - min_qf_pi).mean()
+                actor_losses.append(actor_loss.item())
+                # Optimize the actor
+                actor_loss.backward(retain_graph=True)
+                loss_grads_actor = []
+
+                for index_param, param in enumerate(self.actor.parameters()):
+                    loss_grads_actor.append(param.grad.data.clone().detach())
+
+                self.actor.optimizer.first_step(zero_grad=True)
+
+                # Second forward-backward step
+                # Compute actor loss
+                q_values_pi_new = th.cat(self.critic(replay_data.observations, actions_pi), dim=1)
+                min_qf_pi_new, _ = th.min(q_values_pi_new, dim=1, keepdim=True)
+                actor_loss_new = (ent_coef * log_prob - min_qf_pi_new).mean()
+
+                # Optimize the actor
+                criterion_hero_actor = th.nn.MSELoss()
+                hero_loss_actor = 0.
+                loss_grads_actor_new = th.autograd.grad(actor_loss_new, self.actor.parameters(), retain_graph=True,
+                                                        create_graph=True)
+                loss_grads_copy_actor = []
+                for index, grad in enumerate(loss_grads_actor_new):
+                    loss_grads_copy_actor.append(grad.data.clone().detach())
+
+                # Optimize the critic
+                # compute the Hessian-related loss
+                for index_param, (name, param) in enumerate(self.actor.named_parameters()):
+                    if 'bias' not in name and 'bn' not in name:
+                        for index, (grad, grad_copy) in enumerate(zip(loss_grads_actor, loss_grads_actor_new)):
+                            if index_param == index:
+                                if grad != None and grad_copy != None:
+                                    hero_loss_actor += self.lambda_hero * criterion_hero_actor(grad_copy, grad)
+                hero_loss_actor.backward()
+                for index_param, (param, grad) in enumerate(zip(self.actor.parameters(), loss_grads_copy_actor)):
+                    param.grad += grad
+                self.actor.optimizer.second_step(zero_grad=True)
+
+                # Update target networks
+                if gradient_step % self.target_update_interval == 0:
+                    polyak_update(self.critic.parameters(), self.critic_target.parameters(), self.tau)
+                    # Copy running stats, see GH issue #996
+                    polyak_update(self.batch_norm_stats, self.batch_norm_stats_target, 1.0)
             elif self.optimize_choice == "SAM":
                 if self.critic.share_features_extractor:
                     critic_parameters = [param for name, param in self.critic.named_parameters() if
