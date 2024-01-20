@@ -11,7 +11,6 @@ set -e
 
 env_dqn=('CartPole-v1' 'MountainCar-v0' 'LunarLander-v2' 'Acrobot-v1')
 env_a2c=('CartPole-v1' 'LunarLander-v2' 'MountainCar-v0' 'Acrobot-v1' 'Pendulum-v1' 'LunarLanderContinuous-v2')
-#env_a2c=('CartPole-v1' 'LunarLander-v2' 'Pendulum-v1')
 env_sac=('MountainCarContinuous-v0' 'Pendulum-v1' 'LunarLanderContinuous-v2')
 Optimizer=("SAM" "base")
 Learning_rate=(0.0001 0.0005 0.001 0.005 0.01 0.05 0.1 0.5)
@@ -30,7 +29,7 @@ if [ -z "$5" ]||[ "$5" = "search_all" ];then
             do
             echo "Test learning_rate: $lr, rho: $rho"
             python train.py --algo $1 --env $env  --device cuda --optimize-choice $opt --quantize $2 -P --rho $rho -params learning_rate:$lr --track -n $4
-            ptq_all.sh $1 $env "logs/$1/"$env"_$2bit_"$opt"_$i" $opt $i $rho $lr $opt
+            ptq_all.sh $1 $env "logs/$1/"$env"_$2bit_"$opt"_$i" $opt $i $rho $lr
           done
         done
       done
@@ -45,7 +44,7 @@ if [ -z "$5" ]||[ "$5" = "search_all" ];then
             do
             echo "Test learning_rate: $lr, rho: $rho"
             python train.py --algo $1 --env $env --device cuda --optimize-choice $opt --quantize $2 -P --rho $rho -params learning_rate:$lr --track -n $4
-            ptq_all.sh $1 $env "logs/$1/"$env"_$2bit_"$opt"_$i" $opt $i $rho $lr $opt
+            ptq_all.sh $1 $env "logs/$1/"$env"_$2bit_"$opt"_$i" $opt $i $rho $lr
           done
         done
       done
@@ -60,7 +59,7 @@ if [ -z "$5" ]||[ "$5" = "search_all" ];then
             do
             echo "Test learning_rate: $lr, rho: $rho"
             python train.py --algo $1 --env $env --device cuda --optimize-choice $opt --quantize $2 -P --rho $rho -params learning_rate:$lr --track -n $4
-            ptq_all.sh $1 $env "logs/$1/"$env"_$2bit_"$opt"_$i" $opt $i $rho $lr $opt
+            ptq_all.sh $1 $env "logs/$1/"$env"_$2bit_"$opt"_$i" $opt $i $rho $lr
           done
         done
       done
@@ -79,7 +78,7 @@ elif [ "$5" = "search_rho" ];then
               do
               echo "Test rho: $rho"
               python train.py --algo $1 --env $env --device cuda --optimize-choice $opt --quantize $2 -P --rho $rho  --track -n $4
-              ptq_all.sh $1 $env "logs/$1/"$env"_$2bit_"$opt"_$i" $opt $i $rho 0 $opt
+              ptq_all.sh $1 $env "logs/$1/"$env"_$2bit_"$opt"_$i" $opt $i $rho 0
             done
           done
         done
@@ -92,7 +91,7 @@ elif [ "$5" = "search_rho" ];then
               do
               echo "Test rho: $rho"
               python train.py --algo $1 --env $env --device cuda --optimize-choice $opt --quantize $3 -P --rho $rho  --track -n $4
-              ptq_all.sh $1 $env "logs/$1/"$env"_$2bit_"$opt"_$i" $opt $i $rho 0 $opt
+              ptq_all.sh $1 $env "logs/$1/"$env"_$2bit_"$opt"_$i" $opt $i $rho 0
             done
           done
         done
@@ -105,7 +104,7 @@ elif [ "$5" = "search_rho" ];then
               do
               echo "Test rho: $rho"
               python train.py --algo $1 --env $env $2 --device cuda --optimize-choice $opt --quantize $3 -P --rho $rho  --track -n $4
-              ptq_all.sh $1 $env "logs/$1/"$env"_$2bit_"$opt"_$i" $opt $i $rho 0 $opt
+              ptq_all.sh $1 $env "logs/$1/"$env"_$2bit_"$opt"_$i" $opt $i $rho 0
             done
           done
         done
@@ -123,7 +122,7 @@ elif [ "$5" = "search_lr" ];then
             do
             echo "Test learning_rate: $lr"
             python train.py --algo $1 --env $env $2 --device cuda --optimize-choice $opt --quantize $2 -P --rho 0.05 -params learning_rate:$lr --track -n $4
-            ptq_all.sh $1 $env "logs/$1/"$env"_$2bit_"$opt"_$i" $opt $i 0.05 $lr $opt
+            ptq_all.sh $1 $env "logs/$1/"$env"_$2bit_"$opt"_$i" $opt $i 0.05 $lr
           done
         done
       done
@@ -136,7 +135,7 @@ elif [ "$5" = "search_lr" ];then
             do
             echo "Test learning_rate: $lr"
             python train.py --algo $1 --env $env --device cuda --optimize-choice $opt --quantize $2 -P --rho 0.05 -params learning_rate:$lr --track -n $4
-            ptq_all.sh $1 $env "logs/$1/"$env"_$2bit_"$opt"_$i" $opt $i 0.05 $lr $opt
+            ptq_all.sh $1 $env "logs/$1/"$env"_$2bit_"$opt"_$i" $opt $i 0.05 $lr
           done
         done
       done
@@ -149,7 +148,7 @@ elif [ "$5" = "search_lr" ];then
             do
             echo "Test learning_rate: $lr"
             python train.py --algo $1 --env $env --device cuda --optimize-choice $opt --quantize $2 -P --rho 0.05 -params learning_rate:$lr --track -n $4
-            ptq_all.sh $1 $env "logs/$1/"$env"_$2bit_"$opt"_$i" $opt $i 0.05 $lr $opt
+            ptq_all.sh $1 $env "logs/$1/"$env"_$2bit_"$opt"_$i" $opt $i 0.05 $lr
           done
         done
       done
