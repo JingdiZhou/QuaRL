@@ -16,15 +16,15 @@ env_sac=('MountainCarContinuous-v0' 'Pendulum-v1' 'LunarLanderContinuous-v2')
 Optimizer=("SAM" "base")
 Learning_rate=(0.0001 0.0005 0.001 0.005 0.01 0.05)
 Rho=(0.01 0.02 0.05 0.1 0.2 0.5)
-num=1
 echo "Grid search of Learning rate:[${Learning_rate[*]}]"
 echo "Grid search of rho:[${Rho[*]}]"
 
 # 1.Grid search lr and rho simultaneously by default
 if [ -z "$5" ]||[ "$5" = "search_all" ];then
   if [ "$1" = "dqn" ];then
-  for env in ${env_dqn[*]};do
-    for opt in ${Optimizer[*]};do
+  for opt in ${Optimizer[*]};do
+    num=1
+    for env in ${env_dqn[*]};do
       for lr in ${Learning_rate[*]};do
         for rho in ${Rho[*]};do
           for ((i=1;i<=$3;i++)) # Test different random seeds, $5 can be set random number, but for fairness, it should be set big enough
@@ -39,8 +39,9 @@ if [ -z "$5" ]||[ "$5" = "search_all" ];then
     done
   done
   elif [ "$1" = "a2c" ];then
-    for env in ${env_a2c[*]};do
     for opt in ${Optimizer[*]};do
+      num=1
+      for env in ${env_a2c[*]};do
       for lr in ${Learning_rate[*]};do
         for rho in ${Rho[*]};do
           for ((i=1;i<=$3;i++)) # Test different random seeds, $5 can be set random number, but for fairness, it should be set big enough
@@ -55,8 +56,9 @@ if [ -z "$5" ]||[ "$5" = "search_all" ];then
     done
   done
   elif [ "$1" = "sac" ]; then
-    for env in ${env_sac[*]};do
     for opt in ${Optimizer[*]};do
+      num=1
+      for env in ${env_sac[*]};do
       for lr in ${Learning_rate[*]};do
         for rho in ${Rho[*]};do
           for ((i=1;i<=$3;i++)) # Test different random seeds, $5 can be set random number, but for fairness, it should be set big enough
@@ -76,8 +78,9 @@ if [ -z "$5" ]||[ "$5" = "search_all" ];then
 # 2.Grid search rho, keep using lr suggested by default(rl_baselines3_zoo)
 elif [ "$5" = "search_rho" ];then
   if [ "$1" = "dqn" ];then
-    for env in ${env_dqn[*]};do
-      for opt in ${Optimizer[*]};do
+    for opt in ${Optimizer[*]};do
+      num=1
+      for env in ${env_dqn[*]};do
         for rho in ${Rho[*]};do
             for ((i=1;i<=$3;i++)) # Test different random seeds, $5 can be set random number, but for fairness, it should be set big enough
               do
@@ -90,8 +93,9 @@ elif [ "$5" = "search_rho" ];then
         done
       done
   elif [ "$1" = "a2c" ];then
-    for env in ${env_a2c[*]};do
-      for opt in ${Optimizer[*]};do
+    for opt in ${Optimizer[*]};do
+      num=1
+      for env in ${env_a2c[*]};do
         for rho in ${Rho[*]};do
             for ((i=1;i<=$3;i++)) # Test different random seeds, $5 can be set random number, but for fairness, it should be set big enough
               do
@@ -104,8 +108,9 @@ elif [ "$5" = "search_rho" ];then
         done
       done
   elif [ "$1" = "sac" ];then
-    for env in ${env_sac[*]};do
-      for opt in ${Optimizer[*]};do
+    for opt in ${Optimizer[*]};do
+      num=1
+      for env in ${env_sac[*]};do
         for rho in ${Rho[*]};do
             for ((i=1;i<=$3;i++)) # Test different random seeds, $5 can be set random number, but for fairness, it should be set big enough
               do
@@ -123,40 +128,43 @@ elif [ "$5" = "search_rho" ];then
 # 3.Grid search lr, keep using rho 0.05
 elif [ "$5" = "search_lr" ];then
   if [ "$1" = "dqn" ];then
-    for env in ${env_dqn[*]};do
-      for opt in ${Optimizer[*]};do
+    for opt in ${Optimizer[*]};do
+      num=1
+      for env in ${env_dqn[*]};do
         for lr in ${Learning_rate[*]};do
           for ((i=1;i<=$3;i++)) # Test different random seeds, $5 can be set random number, but for fairness, it should be set big enough
             do
             echo "Test learning_rate: $lr"
             python train.py --algo $1 --env $env $2 --device cuda --optimize-choice $opt --quantize $2 -P --rho 0.05 -params learning_rate:$lr --track -n $4
-            ptq_all.sh $1 $env "logs/$1/"$env"_$2bit_"$opt"_$i" $opt $i 0.05 $lr
+            ptq_all.sh $1 $env "logs/$1/"$env"_$2bit_"$opt"_$num" $opt $num 0.05 $lr
           done
         done
       done
     done
   elif [ "$1" = "a2c" ];then
-    for env in ${env_a2c[*]};do
-      for opt in ${Optimizer[*]};do
+    for opt in ${Optimizer[*]};do
+      num=1
+      for env in ${env_a2c[*]};do
         for lr in ${Learning_rate[*]};do
           for ((i=1;i<=$3;i++)) # Test different random seeds, $5 can be set random number, but for fairness, it should be set big enough
             do
             echo "Test learning_rate: $lr"
             python train.py --algo $1 --env $env --device cuda --optimize-choice $opt --quantize $2 -P --rho 0.05 -params learning_rate:$lr --track -n $4
-            ptq_all.sh $1 $env "logs/$1/"$env"_$2bit_"$opt"_$i" $opt $i 0.05 $lr
+            ptq_all.sh $1 $env "logs/$1/"$env"_$2bit_"$opt"_$num" $opt $num 0.05 $lr
           done
         done
       done
     done
   elif [ "$1" = "sac" ];then
-    for env in ${env_sac[*]};do
-      for opt in ${Optimizer[*]};do
+    for opt in ${Optimizer[*]};do
+      num=1
+      for env in ${env_sac[*]};do
         for lr in ${Learning_rate[*]};do
           for ((i=1;i<=$3;i++)) # Test different random seeds, $5 can be set random number, but for fairness, it should be set big enough
             do
             echo "Test learning_rate: $lr"
             python train.py --algo $1 --env $env --device cuda --optimize-choice $opt --quantize $2 -P --rho 0.05 -params learning_rate:$lr --track -n $4
-            ptq_all.sh $1 $env "logs/$1/"$env"_$2bit_"$opt"_$i" $opt $i 0.05 $lr
+            ptq_all.sh $1 $env "logs/$1/"$env"_$2bit_"$opt"_$num" $opt $num 0.05 $lr
           done
         done
       done
