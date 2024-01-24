@@ -187,6 +187,7 @@ if __name__ == "__main__":
                              path=model_path)  # PTQ loaded model no need to add fake quantization module in the network,so keep passing 32 bit the model
     data = model.get_parameters()  # like data.keys() : ['policy','policy.optimizer']  critics (value functions) and policies (pi functions).
 
+    # start quantization process
     kl_array = []  # log KL of each layers
     for key in data.keys():
         if key == 'policy.optimizer':
@@ -202,7 +203,10 @@ if __name__ == "__main__":
                     else:
                         data[key][param_key], kl = conv_Q(data[key][param_key].cpu().numpy(), q)
                         kl_array.append(kl)
-                        data[key][param_key] = torch.from_numpy(data[key][param_key])
+                        try:
+                            data[key][param_key] = torch.from_numpy(data[key][param_key])
+                        except:
+                            data[key][param_key] = torch.tensor(data[key][param_key])
                 elif ('cnn' in param_key and 'bias' in param_key) or (
                         'action' in param_key):  # like 'pi_features_extractor.cnn.2.bias'
                     if q == 16:
@@ -212,7 +216,10 @@ if __name__ == "__main__":
                     else:
                         data[key][param_key], kl = Q(data[key][param_key].cpu().numpy(), q)
                         kl_array.append(kl)
-                        data[key][param_key] = torch.from_numpy(data[key][param_key])
+                        try:
+                            data[key][param_key] = torch.from_numpy(data[key][param_key])
+                        except:
+                            data[key][param_key] = torch.tensor(data[key][param_key])
                 elif 'weight' in param_key or 'bias' in param_key:
                     if q == 16:
                         data[key][param_key] = data[key][param_key].cpu().numpy().astype(np.float16).astype(

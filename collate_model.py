@@ -78,17 +78,17 @@ def collate() -> None:  # noqa: C901
         "--custom-objects", action="store_true", default=False, help="Use custom objects to solve loading issues"
     )
     parser.add_argument(
+        "--track",
+        action="store_true",
+        default=False,
+        help="if toggled, this experiment will be tracked with Weights and Biases",
+    )
+    parser.add_argument(
         "-P",
         "--progress",
         action="store_true",
         default=False,
         help="if toggled, display a progress bar using tqdm and rich",
-    )
-    parser.add_argument(
-        "--track",
-        action="store_true",
-        default=False,
-        help="if toggled, this experiment will be tracked with Weights and Biases",
     )
     parser.add_argument("--wandb-project-name", type=str, default="", help="the wandb's project name")
     parser.add_argument("--wandb-entity", type=str, default=None, help="the entity (team) of wandb's project")
@@ -108,9 +108,9 @@ def collate() -> None:  # noqa: C901
                 "if you want to use Weights & Biases to track experiment, please install W&B via `pip install wandb`"
             ) from e
         if args.learning_rate != 0:
-            run_name = f"PTQ_{args.env}_{args.algo}_{args.optimize_choice}_lr{args.learning_rate}_rho{args.rho}_seed{args.seed}_time{int(time.time())}"
-        else:
-            run_name = f"PTQ_{args.env}_{args.algo}_{args.optimize_choice}_SuggestedLR_rho{args.rho}_seed{args.seed}_time{int(time.time())}"
+            run_name = f"PTQ_{args.env}_{args.algo}_{args.optimize_choice}_lr{args.learning_rate}_rho{args.rho}_time{int(time.time())}"
+        else: # using suggested learning_rate
+            run_name = f"PTQ_{args.env}_{args.algo}_{args.optimize_choice}_SuggestedLR_rho{args.rho}_time{int(time.time())}"
         if args.wandb_project_name:
             wandb_project_name = args.wandb_project_name
         else:
@@ -130,10 +130,6 @@ def collate() -> None:  # noqa: C901
     # set the bit list to iterate for reward of model
     bits_PTQ = [1, 2, 3, 4, 5, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32]
     for bit in bits_PTQ:
-        # Going through custom gym packages to let them register in the global registory
-        for env_module in args.gym_packages:
-            importlib.import_module(env_module)
-
         optimize_choice = args.optimize_choice
         env_name: EnvironmentName = args.env
         algo = args.algo
@@ -340,15 +336,17 @@ def collate() -> None:  # noqa: C901
             wandb.log({"PTQ/reward": mean_reward}, step=bit)
 
         env.close()
+    if not os.path.exists('pngs'):
+        os.mkdir("pngs")
     if not os.path.exists('pngs/PTQ'):
         os.mkdir("pngs/PTQ")
-    png_path = "pngs/PTQ"
+    png_path = "pngs/PTQ/"
 
     plt.title("PTQ reward")
     plt.plot(bits_PTQ, rewards, color='g', linestyle='-', linewidth=2, marker="o")
     plt.xlabel("bit")
     plt.ylabel('reward')
-    plt.savefig(png_path + "_outcome_{}_{}_{}_lr{}_rho{}.png".format(args.algo, args.env, args.optimize_choice, args.learning_rate, args.rho))
+    plt.savefig(png_path + "outcome_{}_{}_{}_lr{}_rho{}.png".format(args.algo, args.env, args.optimize_choice, args.learning_rate, args.rho))
 
 
 if __name__ == "__main__":

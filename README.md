@@ -25,6 +25,7 @@ pip install -e .
 --track # using wandb to monitor the training
 ```
 ## Quick start to train(search lr and rho)
+Before training, please delete all the previous trained model in the "logs" that corresponds to the algorithm you want to train
 ```sh
 bash auto_train.sh a2c 32 20 1000000 search_all
 # $1 is the name of algorithm
