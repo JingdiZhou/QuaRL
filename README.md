@@ -32,7 +32,7 @@ bash auto_train.sh a2c 32 20 1000000 search_all
 # $2 is the set of quantization bit(QAT), using 32 bit means no QAT
 # $3 is the test times(seeds number)
 # $4 is timestep for training
-# $5 is the choice of training, search all lr and rho, search lr , search rho, search lambda_hero
+# $5 is the choice of training, search all lr and rho, search lr , search rho
 ```
 
 ### Train model from scratch(QAT)
