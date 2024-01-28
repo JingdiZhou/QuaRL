@@ -15,7 +15,7 @@
 
 set -e
 
-SLURM_ARRAY_TASK_ID=204
+#SLURM_ARRAY_TASK_ID=0
 Learning_rate=(0.0005 0.001 0.005 0.01 0.05 0.1)
 Rho=(0.01 0.02 0.05 0.1)
 lambda_hero=(0.05 0.1 0.5 1.0 5.0)
@@ -65,4 +65,4 @@ i=$(( $(($remainder%$base)) + 1 ))
 echo "Seed Number: $i"
 
 python train.py --algo $agent --env $env --device cuda --optimize-choice HERO --quantize 32 -P --lambda_hero $lambda --rho $rho -params learning_rate:$lr --track -n 1000000 --wandb-entity "qorl"
-#ptq_all.sh $agent $env "logs/$agent/"$env"_32bit_"$HERO"_$i" HERO $i $rho $lr
+ptq_all.sh $agent $env "logs/$agent/"$env"_32bit_"$HERO"_$i" HERO $i $rho $lr

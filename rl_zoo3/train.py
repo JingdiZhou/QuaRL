@@ -215,9 +215,9 @@ def train(args) -> None:
                 "if you want to use Weights & Biases to track experiment, please install W&B via `pip install wandb`"
             ) from e
         if args.hyperparams:
-            run_name = f"{args.env}_{args.algo}_{args.optimize_choice}_lr{args.hyperparams['learning_rate']}_rho{args.rho}_seed{args.seed}_time{int(time.time())}"
+            run_name = f"{args.env}_{args.algo}_{args.optimize_choice}_lr{args.hyperparams['learning_rate']}_rho{args.rho}_lambda{args.lambda_hero}_seed{args.seed}_time{int(time.time())}"
         else:
-            run_name = f"{args.env}_{args.algo}_{args.optimize_choice}_SuggestedLR_rho{args.rho}_seed{args.seed}_time{int(time.time())}"
+            run_name = f"{args.env}_{args.algo}_{args.optimize_choice}_SuggestedLR_rho{args.rho}_lambda{args.lambda_hero}_seed{args.seed}_time{int(time.time())}"
         if args.wandb_project_name:
             wandb_project_name = args.wandb_project_name
         else:
