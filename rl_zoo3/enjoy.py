@@ -217,10 +217,10 @@ def enjoy() -> None:  # noqa: C901
     episode_start = np.ones((env.num_envs,), dtype=bool)
 
     generator = range(args.n_timesteps)
-    if args.progress:
-        if tqdm is None:
-            raise ImportError("Please install tqdm and rich to use the progress bar")
-        generator = tqdm(generator)
+    # if args.progress:
+    #     if tqdm is None:
+    #         raise ImportError("Please install tqdm and rich to use the progress bar")
+    #     generator = tqdm(generator)
 
     try:
         for i in generator:

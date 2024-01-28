@@ -82,7 +82,6 @@ def conv_Q(W, n):
     kl = kl_scipy(w_old, newweight)
     return newweight, kl
 
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--optimize-choice", type=str, default="", choices=["base", "HERO", "SAM"])
@@ -102,6 +101,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--norm-reward", action="store_true", default=False,
         help="Normalize reward if applicable (trained with VecNormalize)"
+
     )
     parser.add_argument(
         "--load-checkpoint",
@@ -207,8 +207,8 @@ if __name__ == "__main__":
                             data[key][param_key] = torch.from_numpy(data[key][param_key])
                         except:
                             data[key][param_key] = torch.tensor(data[key][param_key])
-                elif ('cnn' in param_key and 'bias' in param_key) or (
-                        'action' in param_key):  # like 'pi_features_extractor.cnn.2.bias'
+                elif ('cnn' in param_key and 'bias' in param_key) or (  # like 'pi_features_extractor.cnn.2.bias'
+                        'action' in param_key) or 'weight' in param_key or 'bias' in param_key:
                     if q == 16:
                         data[key][param_key] = data[key][param_key].cpu().numpy().astype(np.float16).astype(
                             np.float32)
@@ -220,19 +220,6 @@ if __name__ == "__main__":
                             data[key][param_key] = torch.from_numpy(data[key][param_key])
                         except:
                             data[key][param_key] = torch.tensor(data[key][param_key])
-                elif 'weight' in param_key or 'bias' in param_key:
-                    if q == 16:
-                        data[key][param_key] = data[key][param_key].cpu().numpy().astype(np.float16).astype(
-                            np.float32)
-                        data[key][param_key] = torch.from_numpy(data[key][param_key])
-                    else:
-                        data[key][param_key], kl = Q(data[key][param_key].cpu().numpy(), q)
-                        kl_array.append(kl)
-                        try:
-                            data[key][param_key] = torch.from_numpy(data[key][param_key])
-                        except:
-                            data[key][param_key] = torch.tensor(data[key][param_key])
-                        print("data type:", type(data[key][param_key]))
 
     save_path = 'quantized/{}/{}/{}'.format(q, algo, folder.split('_')[-1])
     os.makedirs(save_path, exist_ok=True)

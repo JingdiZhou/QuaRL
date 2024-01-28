@@ -10,7 +10,7 @@ import numpy as np
 
 SuggestedLR = "SuggestedLR"
 
-learning_rate = [0.0001, 0.0005, 0.001, 0.007, 0.005, 0.01, 0.05, 0.1, 0.5]
+learning_rate = [0.0001, 0.0005, 0.001, 0.007, 0.005, 0.01, 0.05, 0.1, 0.5, "SuggestedLR"]
 Rho = [0.01, 0.02, 0.05, 0.1, 0.2, 0.5]
 optimizer = ["SAM", "base", "HERO"]
 combination = [f"lr{lr}_rho{rho}_{opt}" for lr in learning_rate for rho in Rho for opt in optimizer]
@@ -46,32 +46,22 @@ def main():
     if args.wandb_plot_choice == "train":
         runs = api.runs(entity + '/' + project)
         for run in runs:
-            print(run.name)
-            if SuggestedLR in run.name:  # using Suggested LR
-                rho = ''.join(re.findall(r"\d+\.\d+", run.name.split("_")[4]))
+            # Get related info
+            run_name = run.name if args.wandb_plot_choice == "train" else run.name.replace('PTQ_', '')
+            rho = ''.join(re.findall(r"\d+\.\d+", run_name.split("_")[4]))
+            optimizer = run_name.split("_")[2]
+            if SuggestedLR in run_name:
                 lr = SuggestedLR
-                optimizer = run.name.split("_")[2]
             else:
-                lr = ''.join(re.findall(r"\d+\.\d+", run.name.split("_")[3]))
-                rho = ''.join(re.findall(r"\d+\.\d+", run.name.split("_")[4]))
-                optimizer = run.name.split("_")[2]
+                lr = ''.join(re.findall(r"\d+\.\d+", run_name.split("_")[3]))
 
-            history = run.scan_history(keys=['train/ep_reward_mean', 'evaluation/mean_reward'], page_size=5000)
-            # eval_reward = [row['evaluation/mean_reward'] for row in history]
-            # print(train_reward)
-            # runs_data[f"{lr}_{rho}_{optimizer}_eval_reward"].append(np.array(eval_reward))
-            # runs_data[f"{lr}_{rho}_{optimizer}_train_reward"].append(np.array(train_reward))
-            # step = run.step
-        # visualization
-        # sns.set_theme(style="darkgrid")
-        # train_reward_mean
-        # train_reward_mean = np.vstack(runs_data[f"{lr}_{rho}_{optimizer}_train_reward"])
-        # eval_reward_mean = np.vstack(runs_data[f"{lr}_{rho}_{optimizer}_eval_reward"])
-        # df = pd.DataFrame(train_reward_mean).melt(var_name='step',value_name='reward')
-        # print(df)
-        # sns.lineplot(x='step',y='reward',data=df)
-        # plt.show()
+            history = run.scan_history(keys=['evaluation/mean_reward'],page_size=100)  # page_size=5000)
+            eval_reward = [row['evaluation/mean_reward'] for row in history]
+            print(len(eval_reward))
+
     elif args.wandb_plot_choice == "system":
+        hist_data = []
+        x = [1, 2, 3]
         runs = api.runs(entity + '/' + project)
         for run in runs:
             # get related info
@@ -86,7 +76,14 @@ def main():
             data_all[f'lr{lr}_rho{rho}_{optimizer}'].append(time)
         for key in data_all.keys():
             if len(data_all[f"{key}"]) != 0:
-                data_all[f'{key}'] = np.mean(data_all[f'{key}'])
+                data_all[f'{key}'] = np.mean(data_all[f'{key}']) / 60
+                print(f"{key}: ", data_all[f'{key}'])
+                hist_data.append(data_all[f'{key}'])
+        plt.bar(x, hist_data, tick_label=['SAM', 'base', 'HERO'], facecolor='#9999ff', edgecolor='red', width=0.4)
+        plt.title(f"time_{algo}_{env}")
+        plt.xlabel("Optimizer")
+        plt.ylabel('Time(minute)')
+        plt.show()
 
     elif args.wandb_plot_choice == "ptq":
         plt.style.use('ggplot')
@@ -121,5 +118,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-    # print(data_all)
-
