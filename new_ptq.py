@@ -85,6 +85,8 @@ def conv_Q(W, n):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
+    parser.add_argument('--lambda_hero', default=1, type=float,
+                        metavar='lambda', help='hero regularization strength')
     parser.add_argument("--optimize-choice", type=str, default="", choices=["base", "HERO", "SAM"])
     parser.add_argument('--rho', default=0.05, type=float, help='rho of SAM')
     parser.add_argument("--quantized", help="quantization bit", type=int, default=32)
@@ -183,7 +185,7 @@ if __name__ == "__main__":
     # # overwrite with command line arguments
     # if args.env_kwargs is not None:
     #     env_kwargs.update(args.env_kwargs)
-    model = ALGOS[algo].load(rho=args.rho, quantized=32,
+    model = ALGOS[algo].load(lambda_hero=args.lambda_hero, rho=args.rho, quantized=32,
                              path=model_path)  # PTQ loaded model no need to add fake quantization module in the network,so keep passing 32 bit the model
     data = model.get_parameters()  # like data.keys() : ['policy','policy.optimizer']  critics (value functions) and policies (pi functions).
 

@@ -24,6 +24,8 @@ from stable_baselines3.common.evaluation import evaluate_policy
 
 def collate() -> None:  # noqa: C901
     parser = argparse.ArgumentParser()
+    parser.add_argument('--lambda_hero', default=1, type=float,
+                        metavar='lambda', help='hero regularization strength')
     parser.add_argument('--learning-rate', default=0.0, type=float)
     parser.add_argument('--rho', default=0.05, type=float, help='rho of SAM')
     parser.add_argument("--optimize-choice", type=str, default="", choices=["base", "HERO", "SAM"])
@@ -108,9 +110,9 @@ def collate() -> None:  # noqa: C901
                 "if you want to use Weights & Biases to track experiment, please install W&B via `pip install wandb`"
             ) from e
         if args.learning_rate != 0:
-            run_name = f"PTQ_{args.env}_{args.algo}_{args.optimize_choice}_lr{args.learning_rate}_rho{args.rho}_seed{args.seed}_time{int(time.time())}"
+            run_name = f"PTQ_{args.env}_{args.algo}_{args.optimize_choice}_lr{args.learning_rate}_rho{args.rho}_lambda{args.lambda_hero}_seed{args.seed}_time{int(time.time())}"
         else:
-            run_name = f"PTQ_{args.env}_{args.algo}_{args.optimize_choice}_SuggestedLR_rho{args.rho}_seed{args.seed}_time{int(time.time())}"
+            run_name = f"PTQ_{args.env}_{args.algo}_{args.optimize_choice}_SuggestedLR_rho{args.rho}_lambda{args.lambda_hero}_seed{args.seed}_time{int(time.time())}"
         if args.wandb_project_name:
             wandb_project_name = args.wandb_project_name
         else:
@@ -251,7 +253,7 @@ def collate() -> None:  # noqa: C901
         if "HerReplayBuffer" in hyperparams.get("replay_buffer_class", ""):
             kwargs["env"] = env
 
-        model = ALGOS[algo].load(args.rho, bit, model_path, custom_objects=custom_objects, device=args.device,
+        model = ALGOS[algo].load(args.lambda_hero, args.rho, bit, model_path, custom_objects=custom_objects, device=args.device,
                                  **kwargs)
         obs = env.reset()
 

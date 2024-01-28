@@ -649,6 +649,7 @@ class BaseAlgorithm(ABC):
     @classmethod
     def load(  # noqa: C901
         cls: Type[SelfBaseAlgorithm],
+        lambda_hero: float,
         rho: float,
         quantized: int,
         path: Union[str, pathlib.Path, io.BufferedIOBase],
@@ -739,6 +740,7 @@ class BaseAlgorithm(ABC):
 
         # pytype: disable=not-instantiable,wrong-keyword-args
         model = cls(
+            lambda_hero,
             rho,
             quantized,
             policy=data["policy_class"],

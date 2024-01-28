@@ -23,6 +23,8 @@ import stable_baselines3 as sb3
 
 def enjoy() -> None:  # noqa: C901
     parser = argparse.ArgumentParser()
+    parser.add_argument('--lambda_hero', default=1, type=float,
+                        metavar='lambda', help='hero regularization strength')
     parser.add_argument("--optimize-choice", type=str, default="", choices=["base", "HERO", "SAM"])
     parser.add_argument('--rho', default=0.05, type=float, help='rho of SAM')
     parser.add_argument("--quantized", help="quantization bit", type=int, default=8)
@@ -75,6 +77,13 @@ def enjoy() -> None:  # noqa: C901
     )
     parser.add_argument(
         "--custom-objects", action="store_true", default=False, help="Use custom objects to solve loading issues"
+    )
+    parser.add_argument(
+        "-P",
+        "--progress",
+        action="store_true",
+        default=False,
+        help="if toggled, display a progress bar using tqdm and rich",
     )
     args = parser.parse_args()
 
@@ -199,7 +208,7 @@ def enjoy() -> None:  # noqa: C901
     if "HerReplayBuffer" in hyperparams.get("replay_buffer_class", ""):
         kwargs["env"] = env
 
-    model = ALGOS[algo].load(args.rho, args.quantized, model_path, custom_objects=custom_objects, device=args.device,
+    model = ALGOS[algo].load(args.lambda_hero, args.rho, args.quantized, model_path, custom_objects=custom_objects, device=args.device,
                              **kwargs)
     obs = env.reset()
 
