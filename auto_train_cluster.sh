@@ -43,8 +43,11 @@ echo "env: $env"
 i=$(( $(($remainder%$base)) + 1 ))
 echo "Seed Number: $i"
 
-num=$(( $SLURM_ARRAY_TASK_ID + 1 ))
+num=$(( $SLURM_ARRAY_TASK_ID + 1 ))  #num should start from 1 to 4
 
 source /home/users/akb71/venvs/qorl/bin/activate
+
+
+### modified code(2024/1/30)
 python train.py --algo $agent --env $env --device cuda --optimize-choice HERO --quantize 32 -P --lambda_hero $lambda --rho $rho -params learning_rate:$lr --track -n 1000000 --wandb-entity "qorl"
-bash ptq_all.sh $agent $env "logs/$agent/"$env"_32bit_HERO_$num" HERO $num $rho $lr $lambda
+bash ptq_all.sh $agent $env "logs/$agent/"$env"_32bit_lr"$lr"_rho"$rho"_lambda"$lambda"_HERO_$num" HERO $num $rho $lr $lambda
