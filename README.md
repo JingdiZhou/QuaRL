@@ -34,66 +34,56 @@ bash auto_train.sh a2c 32 20 1000000 search_all
 # $5 is the choice of training, search all lr and rho, search lr , search rho, search lambda_hero
 ```
 
-### Train model from scratch(QAT)
-```sh
-python train.py --algo dqn --env CartPole-v1 --device cuda --optimize-choice base --quantize 32 -P --rho 0.05 --track
-```
+[//]: # ()
+[//]: # (### Train model from scratch&#40;QAT&#41;)
 
+[//]: # (```sh)
 
-### Enjoy model trained with quantization(QAT)
+[//]: # (python train.py --algo dqn --env CartPole-v1 --device cuda --optimize-choice base --quantize 32 -P --rho 0.05 --track)
 
-```sh
-python enjoy.py --algo dqn --env CartPole-v1 --device cuda --optimize-choice base --quantize 32 -f logs/ --exp-id 2 
-#if don't use --exp-id, the latest random seed model will be ran(default)
-```
+[//]: # (```)
 
+[//]: # ()
+[//]: # ()
+[//]: # (### Enjoy model trained with quantization&#40;PTQ&#41;)
 
-### Enjoy model trained with quantization(PTQ)
+[//]: # ()
+[//]: # (```sh)
 
-```sh
-python enjoy.py --algo dqn --env CartPole-v1 -f quantized/8 --exp-id 2
-```
+[//]: # (python enjoy.py --algo dqn --env CartPole-v1 -f quantized/8 --exp-id 2)
 
-### Post training quantization(PTQ) 
-```sh
-python new_ptq.py --algo dqn --env CartPole-v1 --quantized 8 
-```
+[//]: # (```)
 
-### Collate model with different quantization bits and build reward diagram
+[//]: # ()
+[//]: # (### Post training quantization&#40;PTQ&#41; )
 
-#### QAT:
-```sh
-python collate_model.py --algo dqn --env CartPole-v1 --device cuda --optimize-choice base -f logs/ --no-render
-```
-#### PTQ:
-```sh
-python collate_model.py --algo dqn --env CartPole-v1 --device cuda -f quantized --no-render
-```
+[//]: # (```sh)
+
+[//]: # (python new_ptq.py --algo dqn --env CartPole-v1 --quantized 8 )
+
+[//]: # (```)
+
+[//]: # ()
+[//]: # (### Collate model with different quantization bits and build reward diagram)
+
+[//]: # ()
+[//]: # (#### PTQ:)
+
+[//]: # (```sh)
+
+[//]: # (python collate_model.py --algo dqn --env CartPole-v1 --device cuda -f quantized --no-render)
+
+[//]: # (```)
 
 #### Post training quantization(PTQ) of all bits(Script)
 ```sh
-ptq_all.sh dqn CartPole-v1 logs/dqn/CartPole-v1_32bit_base_2 base 2
-# the third parameter is the model path, the fourth parameter is the optimize_choice, the fifth parameter is exp-id:random seed
+ptq_all.sh a2c logs/a2c/CartPole-v1_32bit_lr0.01_rho0.05_lambda1.0_HERO_1 HERO 1 0.05 0.01 1.0
+# optional parameter:
+#1. algo 
+#2. the directory of trained model
+#3. optimize choice, like HERO, SAM or base
+#4. seeds, from 1 to 4
+#5. rho
+#6. learning rate
+#7. lambda_hero
 ```
-### Plot training curves
-given a path of a specific directory which contains trained models of different random seeds, for example, logs/dqn, the script will get all the files satisfied the request
-to plot all the training data to one curve <br/>
-currently support data of SAM and base(HERO later) 
-```sh
-python plot_outcome.py --algo dqn --env CartPole-v1 -s -f logs/dqn  #-f: the directory path containing the log file(s); -s save figure
-```
-## Current contributions
-
-|  RL Algo | PTQ                | QAT                |
-|----------|--------------------|--------------------|
-| ARS      | :heavy_check_mark: |                    | 
-| A2C      | :heavy_check_mark: | :heavy_check_mark: | 
-| PPO      | :heavy_check_mark: | :heavy_check_mark: | 
-| DQN      | :heavy_check_mark: | :heavy_check_mark: | 
-| QR-DQN   | :heavy_check_mark: |                    | 
-| DDPG     | :heavy_check_mark: |                    | 
-| SAC      | :heavy_check_mark: |                    | 
-| TD3      | :heavy_check_mark: |                    | 
-| TQC      | :heavy_check_mark: |                    | 
-| TRPO     | :heavy_check_mark: |                    | 
-

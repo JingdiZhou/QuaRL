@@ -182,13 +182,18 @@ class ExperimentManager:
         self.show_progress = show_progress
 
         self.log_path = f"{log_folder}/{self.algo}/"
-        # self.save_path = os.path.join( # this code records the id of the env like MountainCaContinuous-v0_10,10 is tbe id
-        #     self.log_path, f"{self.env_name}_{get_latest_run_id(self.log_path, self.env_name) + 1}{uuid_str}"
-        # )
-        self.save_path = os.path.join(
-            self.log_path,
-            f"{self.env_name}_{self.q}bit_{optimize_choice}_{get_latest_run_id_new(self.log_path, self.env_name, self.q, self.optimize_choice) + 1}{uuid_str}"
-        )
+
+        # set the saving path of trained model
+        if hyperparams:
+            self.save_path = os.path.join(
+                self.log_path,
+                f"{self.env_name}_{self.q}bit_lr{hyperparams['learning_rate']}_rho{self.rho}_lambda{self.lambda_hero}_{optimize_choice}_{get_latest_run_id_new(self.log_path, self.env_name, hyperparams['learning_rate'], self.q, self.rho, self.lambda_hero, self.optimize_choice) + 1}{uuid_str}"
+            )
+        else:  # using suggested lr
+            self.save_path = os.path.join(
+                self.log_path,
+                f"{self.env_name}_{self.q}bit_lrSuggestedLR_rho{self.rho}_lambda{self.lambda_hero}_{optimize_choice}_{get_latest_run_id_new(self.log_path, self.env_name, 'SuggestedLR', self.q, self.rho, self.lambda_hero, self.optimize_choice) + 1}{uuid_str}"
+            )
         self.params_path = f"{self.save_path}/{self.env_name}"
 
     def setup_experiment(self) -> tuple[BaseAlgorithm, dict[str, Any], VecEnv] | None:

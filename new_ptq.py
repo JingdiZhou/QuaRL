@@ -2,6 +2,7 @@ import torch
 import numpy as np
 import argparse
 import os
+import re
 import sys
 import yaml
 import time
@@ -85,10 +86,6 @@ def conv_Q(W, n):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--lambda_hero', default=1, type=float,
-                        metavar='lambda', help='hero regularization strength')
-    parser.add_argument("--optimize-choice", type=str, default="", choices=["base", "HERO", "SAM"])
-    parser.add_argument('--rho', default=0.05, type=float, help='rho of SAM')
     parser.add_argument("--quantized", help="quantization bit", type=int, default=32)
     parser.add_argument("--env", help="environment ID", type=EnvironmentName, default="CartPole-v1")
     parser.add_argument("-f", "--folder", help="Log folder", type=str, default="rl-trained-agents")
@@ -104,6 +101,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--norm-reward", action="store_true", default=False,
         help="Normalize reward if applicable (trained with VecNormalize)"
+
     )
     parser.add_argument(
         "--load-checkpoint",
@@ -120,17 +118,31 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
+    # e.g. logs/a2c/CartPole-v1_32bit_lr0.001_rho0.05_lambda1.0_HERO_1
+    if "logs/" in args.folder:
+        lr = float(re.findall(r"\d+\.\d+", args.folder.split('/')[-1].split('_')[2])[0])
+        rho = float(re.findall(r"\d+\.\d+", args.folder.split('/')[-1].split('_')[3])[0])
+        lambda_hero = float(re.findall(r"\d+\.\d+", args.folder.split('/')[-1].split('_')[4])[0])
+        exp_id = int(re.findall(r"\d+", args.folder.split('/')[-1].split('_')[-1])[0])
+        optimize_choice = args.folder.split('/')[-1].split('_')[-2]
+    else:
+        lr, rho, lambda_hero = 0
+        exp_id = 0
+        optimize_choice = ""
+
     env_name: EnvironmentName = args.env
     algo = args.algo
-    folder = args.folder
     q = args.quantized
 
     try:
         _, model_path, log_path = get_model_path(
-            args.optimize_choice,
-            args.quantized,
+            lr,
+            lambda_hero,
+            rho,
+            optimize_choice,
+            q,
             args.exp_id,
-            folder,
+            args.folder,
             algo,
             env_name,
             args.load_best,
@@ -140,7 +152,7 @@ if __name__ == "__main__":
     except (AssertionError, ValueError) as e:
         # Special case for rl-trained agents
         # auto-download from the hub
-        if "rl-trained-agents" not in folder:
+        if "rl-trained-agents" not in args.folder:
             raise e
         else:
             print(
@@ -150,16 +162,19 @@ if __name__ == "__main__":
                 algo=algo,
                 env_name=env_name,
                 exp_id=args.exp_id,
-                folder=folder,
+                folder=args.folder,
                 organization="sb3",
                 repo_name=None,
                 force=False,
             )
             # Try again
             _, model_path, log_path = get_model_path(
-                args.optimize_choice,
-                args.quantized,
-                folder,
+                lr,
+                lambda_hero,
+                rho,
+                optimize_choice,
+                q,
+                args.folder,
                 algo,
                 env_name,
                 args.load_best,
@@ -167,7 +182,7 @@ if __name__ == "__main__":
                 args.load_last_checkpoint,
             )
 
-    print(f"Loading {model_path}")
+    print(f"Loading trained model from '{model_path}'")
 
     set_random_seed(args.seed)
 
@@ -182,17 +197,16 @@ if __name__ == "__main__":
             loaded_args = yaml.load(f, Loader=yaml.UnsafeLoader)  # pytype: disable=module-attr
             if loaded_args["env_kwargs"] is not None:
                 env_kwargs = loaded_args["env_kwargs"]
-    # # overwrite with command line arguments
-    # if args.env_kwargs is not None:
-    #     env_kwargs.update(args.env_kwargs)
-    model = ALGOS[algo].load(lambda_hero=args.lambda_hero, rho=args.rho, quantized=32,
-                             path=model_path)  # PTQ loaded model no need to add fake quantization module in the network,so keep passing 32 bit the model
-    data = model.get_parameters()  # like data.keys() : ['policy','policy.optimizer']  critics (value functions) and policies (pi functions).
+
+    model = ALGOS[algo].load(lambda_hero=lambda_hero, rho=rho, quantized=32,
+                             path=model_path)  # PTQ loaded model no need to add fake quantization module in the network, so keep passing 32 bit to the model
+    data = model.get_parameters()  # data.keys() will be like: ['policy','policy.optimizer']  critics (value functions) and policies (pi functions).
 
     kl_array = []  # log KL of each layers
+    # Extract parameters to quantize and then put them back into trained model
     for key in data.keys():
         if key == 'policy.optimizer':
-            pass
+            pass  # TODO: quantize policy.optimizer?
         else:  # policy
             for param_key in data[key].keys():
                 print('[', key, ']', '[', param_key, ']')
@@ -214,7 +228,10 @@ if __name__ == "__main__":
                     else:
                         data[key][param_key], kl = Q(data[key][param_key].cpu().numpy(), q)
                         kl_array.append(kl)
-                        data[key][param_key] = torch.from_numpy(data[key][param_key])
+                        try:
+                            data[key][param_key] = torch.from_numpy(data[key][param_key])
+                        except:
+                            data[key][param_key] = torch.tensor(data[key][param_key])
                 elif 'weight' in param_key or 'bias' in param_key:
                     if q == 16:
                         data[key][param_key] = data[key][param_key].cpu().numpy().astype(np.float16).astype(
@@ -228,11 +245,15 @@ if __name__ == "__main__":
                         except:
                             data[key][param_key] = torch.tensor(data[key][param_key])
                         print("data type:", type(data[key][param_key]))
-
-    save_path = 'quantized/{}/{}/{}'.format(q, algo, folder.split('_')[-1])
+    if "logs/" in args.folder:
+        save_path = 'quantized/{}/{}/{}'.format(q, algo,
+                                            f"{env_name}_lr{lr}_rho{rho}_lambda{lambda_hero}_{optimize_choice}_" +
+                                            args.folder.split('_')[-1])
+    else:
+        save_path = 'quantized/{}/{}/{}'.format(q, algo, f"{env_name}_{exp_id+1}")
     os.makedirs(save_path, exist_ok=True)
     model.policy.load_state_dict(data['policy'])
     model.save(save_path + '/{}.zip'.format(env_name))
 
-    print("model has succussfully saved to {}".format(save_path + '/{}.zip'.format(env_name)))
+    print("model has successfully saved to {}".format(save_path + '/{}.zip'.format(env_name)))
     # print("Kl divergence: ", sum(kl_array))

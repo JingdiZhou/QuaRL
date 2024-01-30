@@ -5,7 +5,6 @@ import sys
 
 import numpy as np
 import torch as th
-import wandb
 import time
 import yaml
 from huggingface_sb3 import EnvironmentName
@@ -24,9 +23,9 @@ from stable_baselines3.common.evaluation import evaluate_policy
 
 def collate() -> None:  # noqa: C901
     parser = argparse.ArgumentParser()
-    parser.add_argument('--lambda_hero', default=1, type=float,
+    parser.add_argument('--lambda_hero', default=1.0, type=float,
                         metavar='lambda', help='hero regularization strength')
-    parser.add_argument('--learning-rate', default=0.0, type=float)
+    parser.add_argument('--learning-rate', default=0.01, type=float)
     parser.add_argument('--rho', default=0.05, type=float, help='rho of SAM')
     parser.add_argument("--optimize-choice", type=str, default="", choices=["base", "HERO", "SAM"])
     parser.add_argument("--env", help="environment ID", type=EnvironmentName, default="CartPole-v1")
@@ -92,6 +91,7 @@ def collate() -> None:  # noqa: C901
         default=False,
         help="if toggled, this experiment will be tracked with Weights and Biases",
     )
+    # setting of W&B
     parser.add_argument("--wandb-project-name", type=str, default="", help="the wandb's project name")
     parser.add_argument("--wandb-entity", type=str, default=None, help="the entity (team) of wandb's project")
     parser.add_argument(
@@ -111,7 +111,7 @@ def collate() -> None:  # noqa: C901
             ) from e
         if args.learning_rate != 0:
             run_name = f"PTQ_{args.env}_{args.algo}_{args.optimize_choice}_lr{args.learning_rate}_rho{args.rho}_lambda{args.lambda_hero}_seed{args.seed}_time{int(time.time())}"
-        else:
+        else:  # if learning_rate is 0, it means using suggested learning rate
             run_name = f"PTQ_{args.env}_{args.algo}_{args.optimize_choice}_SuggestedLR_rho{args.rho}_lambda{args.lambda_hero}_seed{args.seed}_time{int(time.time())}"
         if args.wandb_project_name:
             wandb_project_name = args.wandb_project_name
@@ -132,10 +132,10 @@ def collate() -> None:  # noqa: C901
     # set the bit list to iterate for reward of model
     bits_PTQ = [1, 2, 3, 4, 5, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32]
     for bit in bits_PTQ:
-        # Going through custom gym packages to let them register in the global registory
         for env_module in args.gym_packages:
             importlib.import_module(env_module)
 
+        learning_rate = "SuggestedLR" if args.learning_rate == 0 else args.learning_rate
         optimize_choice = args.optimize_choice
         env_name: EnvironmentName = args.env
         algo = args.algo
@@ -143,6 +143,9 @@ def collate() -> None:  # noqa: C901
 
         try:
             _, model_path, log_path = get_model_path(
+                learning_rate,
+                args.lambda_hero,
+                args.rho,
                 optimize_choice,
                 bit,
                 args.exp_id,
@@ -173,6 +176,11 @@ def collate() -> None:  # noqa: C901
                 )
                 # Try again
                 _, model_path, log_path = get_model_path(
+                    learning_rate,
+                    args.lambda_hero,
+                    args.rho,
+                    optimize_choice,
+                    bit,
                     args.exp_id,
                     folder,
                     algo,
@@ -253,7 +261,8 @@ def collate() -> None:  # noqa: C901
         if "HerReplayBuffer" in hyperparams.get("replay_buffer_class", ""):
             kwargs["env"] = env
 
-        model = ALGOS[algo].load(args.lambda_hero, args.rho, bit, model_path, custom_objects=custom_objects, device=args.device,
+        model = ALGOS[algo].load(args.lambda_hero, args.rho, bit, model_path, custom_objects=custom_objects,
+                                 device=args.device,
                                  **kwargs)
         obs = env.reset()
 
@@ -350,7 +359,9 @@ def collate() -> None:  # noqa: C901
     plt.plot(bits_PTQ, rewards, color='g', linestyle='-', linewidth=2, marker="o")
     plt.xlabel("bit")
     plt.ylabel('reward')
-    plt.savefig(png_path + "_outcome_{}_{}_{}_lr{}_rho{}.png".format(args.algo, args.env, args.optimize_choice, args.learning_rate, args.rho))
+    plt.savefig(png_path + "_outcome_{}_{}_{}_lr{}_rho{}_lambda{}.png".format(args.algo, args.env, args.optimize_choice,
+                                                                              args.learning_rate, args.rho,
+                                                                              args.lambda_hero))
 
 
 if __name__ == "__main__":
