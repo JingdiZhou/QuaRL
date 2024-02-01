@@ -24,15 +24,24 @@ pip install -e .
 -params # use the parameters provided by user(not from rl_baseline3_zoo). e.g.-params learning_rate:0.01 buffer_size:256
 --track # using wandb to monitor the training
 ```
-## Quick start to train(search lr, rho and lambda_hero)
-```sh
-bash auto_train.sh a2c 32 20 1000000 search_all
-# $1 is the name of algorithm
-# $2 is the set of quantization bit(QAT), using 32 bit means no QAT
-# $3 is the test times(seeds number)
-# $4 is timestep for training
-# $5 is the choice of training, search all lr and rho, search lr , search rho, search lambda_hero
-```
+
+[//]: # (## Quick start to train&#40;search lr, rho and lambda_hero&#41;)
+
+[//]: # (```sh)
+
+[//]: # (bash auto_train.sh a2c 32 20 1000000 search_all)
+
+[//]: # (# $1 is the name of algorithm)
+
+[//]: # (# $2 is the set of quantization bit&#40;QAT&#41;, using 32 bit means no QAT)
+
+[//]: # (# $3 is the test times&#40;seeds number&#41;)
+
+[//]: # (# $4 is timestep for training)
+
+[//]: # (# $5 is the choice of training, search all lr and rho, search lr , search rho, search lambda_hero)
+
+[//]: # (```)
 
 [//]: # ()
 [//]: # (### Train model from scratch&#40;QAT&#41;)
@@ -45,14 +54,18 @@ bash auto_train.sh a2c 32 20 1000000 search_all
 
 [//]: # ()
 [//]: # ()
-[//]: # (### Enjoy model trained with quantization&#40;PTQ&#41;)
+### Enjoy model trained with quantization(PTQ)
 
-[//]: # ()
-[//]: # (```sh)
 
-[//]: # (python enjoy.py --algo dqn --env CartPole-v1 -f quantized/8 --exp-id 2)
 
-[//]: # (```)
+1. to check training results of trained model(visualize the simulation environment)
+```sh
+python enjoy.py --algo a2c --env Pendulum-v1 --quantized 32 -f logs/a2c/Pendulum-v1_32bit_lr0.05_rho0.01_lambda1.0_HERO_1
+```
+2. to check quantized effect of trained model(visualize the simulation environment),just change quantized directory like quantized/8/, quantized/16/
+```sh
+python enjoy.py --algo a2c --env MountainCarContinuous-v0 --quantized 32 -f quantized/8/a2c/MountainCarContinuous-v0_lrSuggestedLR_rho0.05_lambda1.0_base_1
+```
 
 [//]: # ()
 [//]: # (### Post training quantization&#40;PTQ&#41; )
@@ -75,7 +88,9 @@ bash auto_train.sh a2c 32 20 1000000 search_all
 
 [//]: # (```)
 
-#### Post training quantization(PTQ) of all bits(Script)
+### Post training quantization(PTQ) of all bits(Script)
+1. if you want to use default learning rate provided by rl_baseline3_zoo(SuggestedLR), please pass learning rate(the sixth parameter) = 0, for example, "ptq_all.sh a2c MountainCarContinuous-v0  logs/a2c/MountainCarContinuous-v0_32bit_lrSuggestedLR_rho0.05_lambda1.0_base_1 base 1 0.05 0 1.0"<br/><br/>
+2. if you want to use optimizer "base", you can just set optmize_choice to "base", rho and lambda won't influence its training(pass rho adn lambda to it just for grouping in W&B
 ```sh
 ptq_all.sh a2c logs/a2c/CartPole-v1_32bit_lr0.01_rho0.05_lambda1.0_HERO_1 HERO 1 0.05 0.01 1.0
 # optional parameter:
@@ -87,3 +102,6 @@ ptq_all.sh a2c logs/a2c/CartPole-v1_32bit_lr0.01_rho0.05_lambda1.0_HERO_1 HERO 1
 #6. learning rate
 #7. lambda_hero
 ```
+
+
+

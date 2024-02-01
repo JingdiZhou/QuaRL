@@ -409,6 +409,7 @@ def get_latest_run_id_new(log_path: str, env_name: EnvironmentName, quantized: i
     :return: latest run number
     """
     max_run_id = 0
+    print("@@@@@@@@@@@@@@@@@address", os.getcwd())
     for path in glob.glob(os.path.join(log_path,
                                        env_name + f"_{quantized}bit_lr{hyperparams}_rho{rho}_lambda{lambda_hero}_{optimize_choice}_[0-9]*")):
         run_id = path.split("_")[-1]
@@ -521,20 +522,23 @@ def get_model_path(
             print("loading model trained by user(train from scratch) that needs to be quantized(PTQ)")
             log_path = folder
             print("log_path:", log_path)
-        elif "quantized/" in folder:  # calling collate_model.py in ptq_all.sh
+        elif "quantized" in folder and learning_rate == 0:  # using enjoy.py to display quantized trained model
+            log_path = folder
+            print("log_path:", log_path)
+        elif "quantized" in folder:  # calling collate_model.py in ptq_all.sh
             log_path = os.path.join(folder, algo,
                                     f"{env_name}_lr{learning_rate}_rho{rho}_lambda{lambda_hero}_{optimize_choice}_" + str(
                                         exp_id))
             print("log_path:", log_path)
-        elif f'logs/{algo}' in folder:  # calling enjoy.py
-            print(f"load QAT {quantized}bit model experiment")  # enjoy QAT single case
-            log_path = os.path.join(folder, algo,
-                                    f"{env_name}_lr{learning_rate}_rho{rho}_lambda{lambda_hero}_{optimize_choice}_" + str(
-                                        exp_id))
-            # log_path = os.path.join(folder, algo, f"{env_name}_1")
-            print("log_path:", log_path)
+        # elif f'logs/{algo}' in folder:  # calling enjoy.py
+        #     print(f"load QAT {quantized}bit model experiment")  # enjoy QAT single case
+        #     log_path = os.path.join(folder, algo,
+        #                             f"{env_name}_lr{learning_rate}_rho{rho}_lambda{lambda_hero}_{optimize_choice}_" + str(
+        #                                 exp_id))
+        #     # log_path = os.path.join(folder, algo, f"{env_name}_1")
+        #     print("log_path:", log_path)
         else:
-            raise ValueError("no such choice ")
+            raise ValueError("no such choice")
 
     assert os.path.isdir(log_path), f"The {log_path} folder was not found"
     model_name = ModelName(algo, env_name)

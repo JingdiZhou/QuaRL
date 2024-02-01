@@ -2,6 +2,7 @@ import argparse
 import importlib
 import os
 import sys
+import re
 
 import numpy as np
 import torch as th
@@ -91,17 +92,38 @@ def enjoy() -> None:  # noqa: C901
     for env_module in args.gym_packages:
         importlib.import_module(env_module)
 
-    optimize_choice = args.optimize_choice
+    if "logs/" in args.folder:
+        if "logs/" in args.folder:
+            if not "SuggestedLR" in args.folder:
+                lr = float(re.findall(r"\d+\.\d+", args.folder.split('/')[-1].split('_')[2])[0])
+            else:
+                lr = "SuggestedLR"
+        rho = float(re.findall(r"\d+\.\d+", args.folder.split('/')[-1].split('_')[3])[0])
+        lambda_hero = float(re.findall(r"\d+\.\d+", args.folder.split('/')[-1].split('_')[4])[0])
+        exp_id = int(re.findall(r"\d+", args.folder.split('/')[-1].split('_')[-1])[0])
+        optimize_choice = args.folder.split('/')[-1].split('_')[-2]
+    elif "quantized" in args.folder:
+        lr, rho, lambda_hero = 0, 0, 0
+        optimize_choice = args.folder.split('/')[-1].split('_')[-2]
+        exp_id = int(re.findall(r"\d+", args.folder.split('/')[-1].split('_')[-1])[0])
+    else:  # rl-trained-agents
+        lr, rho, lambda_hero = 0, 0, 0
+        exp_id = 0
+        optimize_choice = ""
+
     env_name: EnvironmentName = args.env
     algo = args.algo
-    folder = args.folder
+    q = args.quantized
 
     try:
         _, model_path, log_path = get_model_path(
+            lr,
+            lambda_hero,
+            rho,
             optimize_choice,
-            args.quantized,
-            args.exp_id,
-            folder,
+            q,
+            exp_id,
+            args.folder,
             algo,
             env_name,
             args.load_best,
@@ -111,7 +133,7 @@ def enjoy() -> None:  # noqa: C901
     except (AssertionError, ValueError) as e:
         # Special case for rl-trained agents
         # auto-download from the hub
-        if "rl-trained-agents" not in folder:
+        if "rl-trained-agents" not in args.folder:
             raise e
         else:
             print(
@@ -120,16 +142,21 @@ def enjoy() -> None:  # noqa: C901
             download_from_hub(
                 algo=algo,
                 env_name=env_name,
-                exp_id=args.exp_id,
-                folder=folder,
+                exp_id=exp_id,
+                folder=args.folder,
                 organization="sb3",
                 repo_name=None,
                 force=False,
             )
             # Try again
             _, model_path, log_path = get_model_path(
-                args.exp_id,
-                folder,
+                lr,
+                lambda_hero,
+                rho,
+                optimize_choice,
+                q,
+                exp_id,
+                args.folder,
                 algo,
                 env_name,
                 args.load_best,
@@ -208,7 +235,8 @@ def enjoy() -> None:  # noqa: C901
     if "HerReplayBuffer" in hyperparams.get("replay_buffer_class", ""):
         kwargs["env"] = env
 
-    model = ALGOS[algo].load(args.lambda_hero, args.rho, args.quantized, model_path, custom_objects=custom_objects, device=args.device,
+    model = ALGOS[algo].load(args.lambda_hero, args.rho, args.quantized, model_path, custom_objects=custom_objects,
+                             device=args.device,
                              **kwargs)
     obs = env.reset()
 

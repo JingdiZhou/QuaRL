@@ -187,12 +187,14 @@ class ExperimentManager:
         if hyperparams:
             self.save_path = os.path.join(
                 self.log_path,
-                f"{self.env_name}_{self.q}bit_lr{hyperparams['learning_rate']}_rho{self.rho}_lambda{self.lambda_hero}_{optimize_choice}_{get_latest_run_id_new(self.log_path, self.env_name, hyperparams['learning_rate'], self.q, self.rho, self.lambda_hero, self.optimize_choice) + 1}{uuid_str}"
+                f"{self.env_name}_{self.q}bit_lr{hyperparams['learning_rate']}_rho{self.rho}_lambda{self.lambda_hero}_"
+                f"{optimize_choice}_{get_latest_run_id_new(self.log_path, self.env_name, self.q, hyperparams['learning_rate'], self.rho, self.lambda_hero, self.optimize_choice) + 1}{uuid_str}"
             )
         else:  # using suggested lr
             self.save_path = os.path.join(
                 self.log_path,
-                f"{self.env_name}_{self.q}bit_lrSuggestedLR_rho{self.rho}_lambda{self.lambda_hero}_{optimize_choice}_{get_latest_run_id_new(self.log_path, self.env_name, 'SuggestedLR', self.q, self.rho, self.lambda_hero, self.optimize_choice) + 1}{uuid_str}"
+                f"{self.env_name}_{self.q}bit_lrSuggestedLR_rho{self.rho}_lambda{self.lambda_hero}_{optimize_choice}_"
+                f"{get_latest_run_id_new(self.log_path, self.env_name, self.q,'SuggestedLR',  self.rho, self.lambda_hero, self.optimize_choice) + 1}{uuid_str}"
             )
         self.params_path = f"{self.save_path}/{self.env_name}"
 

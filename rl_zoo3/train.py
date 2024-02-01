@@ -216,7 +216,7 @@ def train(args) -> None:
             ) from e
         if args.hyperparams:
             run_name = f"{args.env}_{args.algo}_{args.optimize_choice}_lr{args.hyperparams['learning_rate']}_rho{args.rho}_lambda{args.lambda_hero}_seed{args.seed}_time{int(time.time())}"
-        else: # using suggested learning rate
+        else:  # using suggested learning rate
             run_name = f"{args.env}_{args.algo}_{args.optimize_choice}_SuggestedLR_rho{args.rho}_lambda{args.lambda_hero}_seed{args.seed}_time{int(time.time())}"
         if args.wandb_project_name:
             wandb_project_name = args.wandb_project_name

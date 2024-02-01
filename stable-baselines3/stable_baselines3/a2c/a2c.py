@@ -276,7 +276,7 @@ class A2C(OnPolicyAlgorithm):
                 loss.backward()
                 self.policy.optimizer.second_step(zero_grad=True)
             # Optimization step
-            else:
+            else:  # oribinal optimizer
                 self.policy.optimizer.zero_grad()
                 loss.backward()
 

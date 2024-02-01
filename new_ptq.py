@@ -120,15 +120,20 @@ if __name__ == "__main__":
 
     # e.g. logs/a2c/CartPole-v1_32bit_lr0.001_rho0.05_lambda1.0_HERO_1
     if "logs/" in args.folder:
-        lr = float(re.findall(r"\d+\.\d+", args.folder.split('/')[-1].split('_')[2])[0])
+        if not "SuggestedLR" in args.folder:
+            lr = float(re.findall(r"\d+\.\d+", args.folder.split('/')[-1].split('_')[2])[0])
+        else:
+            lr = "SuggestedLR"
         rho = float(re.findall(r"\d+\.\d+", args.folder.split('/')[-1].split('_')[3])[0])
         lambda_hero = float(re.findall(r"\d+\.\d+", args.folder.split('/')[-1].split('_')[4])[0])
         exp_id = int(re.findall(r"\d+", args.folder.split('/')[-1].split('_')[-1])[0])
         optimize_choice = args.folder.split('/')[-1].split('_')[-2]
+        print(f"lr:{lr}, rho:{rho}, lambda_hero:{lambda_hero}, optimize_choice:{optimize_choice}")
     else:
-        lr, rho, lambda_hero = 0
+        lr, rho, lambda_hero = 0, 0, 0
         exp_id = 0
         optimize_choice = ""
+        print(f"lr:{lr}, rho:{rho}, lambda_hero:{lambda_hero}, optimize_choice:{optimize_choice}")
 
     env_name: EnvironmentName = args.env
     algo = args.algo
@@ -141,7 +146,7 @@ if __name__ == "__main__":
             rho,
             optimize_choice,
             q,
-            args.exp_id,
+            exp_id,
             args.folder,
             algo,
             env_name,
@@ -161,7 +166,7 @@ if __name__ == "__main__":
             download_from_hub(
                 algo=algo,
                 env_name=env_name,
-                exp_id=args.exp_id,
+                exp_id=exp_id,
                 folder=args.folder,
                 organization="sb3",
                 repo_name=None,
@@ -174,6 +179,7 @@ if __name__ == "__main__":
                 rho,
                 optimize_choice,
                 q,
+                exp_id,
                 args.folder,
                 algo,
                 env_name,

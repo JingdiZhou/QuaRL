@@ -139,7 +139,7 @@ def collate() -> None:  # noqa: C901
         optimize_choice = args.optimize_choice
         env_name: EnvironmentName = args.env
         algo = args.algo
-        folder = args.folder + f"/{bit}"
+        folder = os.path.join(args.folder, str(bit))
 
         try:
             _, model_path, log_path = get_model_path(
