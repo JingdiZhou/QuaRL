@@ -90,7 +90,7 @@ python enjoy.py --algo a2c --env MountainCarContinuous-v0 --quantized 32 -f quan
 
 ### Post training quantization(PTQ) of all bits(Script)
 1. if you want to use default learning rate provided by rl_baseline3_zoo(SuggestedLR), please pass learning rate(the sixth parameter) = 0, for example, "ptq_all.sh a2c MountainCarContinuous-v0  logs/a2c/MountainCarContinuous-v0_32bit_lrSuggestedLR_rho0.05_lambda1.0_base_1 base 1 0.05 0 1.0"<br/><br/>
-2. if you want to use optimizer "base", you can just set optmize_choice to "base", rho and lambda won't influence its training(pass rho adn lambda to it just for grouping in W&B
+2. if you want to use optimizer "base", you can just set optmize_choice to "base", rho and lambda won't influence its training(pass rho and lambda just for grouping in W&B)
 ```sh
 ptq_all.sh a2c logs/a2c/CartPole-v1_32bit_lr0.01_rho0.05_lambda1.0_HERO_1 HERO 1 0.05 0.01 1.0
 # optional parameter:
