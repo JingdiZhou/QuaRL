@@ -512,10 +512,10 @@ def get_model_path(
                 quantized))  # PTQ, called by new_ptq.py
             log_path = os.path.join(folder, algo, f"{env_name}_{str(exp_id)}")
             print("log_path:", log_path)
-        elif "quantized" in folder:
+        elif "quantized" or "logs/" in folder:
             print("loading model that has been quantized(PTQ) to {} bit".format(
                 quantized))  # enjoy PTQ, called by enjoy.py
-            log_path = os.path.join(folder, algo, str(exp_id))
+            log_path = os.path.join(folder)
             print("log_path:", log_path)
     else:
         if f'logs/{algo}' in folder:  # calling new_ptq.py in ptq_all.sh

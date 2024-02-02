@@ -101,10 +101,8 @@ def enjoy() -> None:  # noqa: C901
         rho = float(re.findall(r"\d+\.\d+", args.folder.split('/')[-1].split('_')[3])[0])
         lambda_hero = float(re.findall(r"\d+\.\d+", args.folder.split('/')[-1].split('_')[4])[0])
         exp_id = int(re.findall(r"\d+", args.folder.split('/')[-1].split('_')[-1])[0])
-        optimize_choice = args.folder.split('/')[-1].split('_')[-2]
     elif "quantized" in args.folder:
         lr, rho, lambda_hero = 0, 0, 0
-        optimize_choice = args.folder.split('/')[-1].split('_')[-2]
         exp_id = int(re.findall(r"\d+", args.folder.split('/')[-1].split('_')[-1])[0])
     else:  # rl-trained-agents
         lr, rho, lambda_hero = 0, 0, 0
@@ -120,7 +118,7 @@ def enjoy() -> None:  # noqa: C901
             lr,
             lambda_hero,
             rho,
-            optimize_choice,
+            args.optimize_choice,
             q,
             exp_id,
             args.folder,
@@ -153,7 +151,7 @@ def enjoy() -> None:  # noqa: C901
                 lr,
                 lambda_hero,
                 rho,
-                optimize_choice,
+                args.optimize_choice,
                 q,
                 exp_id,
                 args.folder,
