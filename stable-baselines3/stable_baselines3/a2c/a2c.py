@@ -191,6 +191,8 @@ class A2C(OnPolicyAlgorithm):
                 for index_param, param in enumerate(self.policy.parameters()):
                     loss_grads.append(param.grad.data.clone().detach())
 
+                # Todo: add clip gradient function
+                th.nn.utils.clip_grad_norm_(self.policy.parameters(), self.max_grad_norm)
                 self.policy.optimizer.first_step(zero_grad=True)
 
                 # compute the new loss
@@ -238,6 +240,8 @@ class A2C(OnPolicyAlgorithm):
                 hero_loss.backward()
                 for index_param, (param, grad) in enumerate(zip(self.policy.parameters(), loss_grads_copy)):
                     param.grad += grad
+                # Todo: add clip gradient function
+                th.nn.utils.clip_grad_norm_(self.policy.parameters(), self.max_grad_norm)
                 self.policy.optimizer.second_step(zero_grad=True)
 
             elif self.optimize_choice == "SAM":

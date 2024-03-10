@@ -3,7 +3,7 @@ import numpy as np
 import argparse
 import os
 import re
-import sys
+import shutil
 import yaml
 import time
 import stable_baselines3 as sb3
@@ -42,6 +42,22 @@ def kl_scipy(p, q):
         return 0
 
 
+def Q1(W, n):
+    w_old = W
+    if n >= 32:
+        return W, 0
+    assert (len(W.shape) <= 2)
+    range = torch.abs(torch.min(W)) + torch.abs(torch.max(W))
+    d = range / (2 ** n)
+    value, _ = torch.min(W, 0)
+    z = torch.neg(value) // d
+    W = torch.round(W / d)
+    W = d * W
+    print("W.shape:", W.shape)
+    kl = 0
+    return W, kl
+
+
 def Q(W, n):
     w_old = W
     if n >= 32:
@@ -58,8 +74,8 @@ def Q(W, n):
     # plot histogram
     import matplotlib.pyplot as plt
 
-    if not os.path.exists("weights-histogram"):
-        os.mkdir("weights-histogram")
+    # if not os.path.exists("weights-histogram"):
+    #     os.mkdir("weights-histogram")
     # plt.hist(w_old.flatten(), bins=100)
     # plt.hist(W.flatten(), bins=100)
 
@@ -117,6 +133,7 @@ if __name__ == "__main__":
     )
 
     args = parser.parse_args()
+    print("################################## START #######################################")
 
     # e.g. logs/a2c/CartPole-v1_32bit_lr0.001_rho0.05_lambda1.0_HERO_1
     if "logs/" in args.folder:
@@ -207,16 +224,37 @@ if __name__ == "__main__":
     model = ALGOS[algo].load(lambda_hero=lambda_hero, rho=rho, quantized=32,
                              path=model_path)  # PTQ loaded model no need to add fake quantization module in the network, so keep passing 32 bit to the model
     data = model.get_parameters()  # data.keys() will be like: ['policy','policy.optimizer']  critics (value functions) and policies (pi functions).
-
     kl_array = []  # log KL of each layers
+
     # Extract parameters to quantize and then put them back into trained model
+    """
+    Network architecture(Policy):
+    e.g. a2c MountainCar-v0:
+    ['mlp_extractor.policy_net.0.weight', -->   torch.Size([64, 2])
+    'mlp_extractor.policy_net.0.bias',    -->   torch.Size([64])
+    'mlp_extractor.policy_net.2.weight',  -->   torch.Size([64, 64])
+    'mlp_extractor.policy_net.2.bias',    -->   torch.Size([64])
+    'mlp_extractor.value_net.0.weight',   -->   torch.Size([64, 2])
+    'mlp_extractor.value_net.0.bias',     -->   torch.Size([64])
+    'mlp_extractor.value_net.2.weight',   -->   torch.Size([64, 64])
+    'mlp_extractor.value_net.2.bias',     -->   torch.Size([64])
+    'action_net.weight',                  -->   torch.Size([3, 64])
+    'action_net.bias',                    -->   torch.Size([3])
+    'value_net.weight',                   -->   torch.Size([1, 64])
+    'value_net.bias']                     -->   torch.Size([1])
+    """
+
     for key in data.keys():
         if key == 'policy.optimizer':
             pass  # TODO: quantize policy.optimizer?
         else:  # policy
+            print('===  Policy network structure:  ===')
             for param_key in data[key].keys():
-                print('[', key, ']', '[', param_key, ']')
+                print('[', key, ']', '[', param_key, ']', '    -->    ', data[key][param_key].shape)
+                # if param_key == 'mlp_extractor.policy_net.0.weight':
+                #     print(data[key][param_key])
                 if 'cnn' in param_key and 'weight' in param_key:  # like 'pi_features_extractor.cnn.2.weight'
+                    '''Numpy version'''
                     if q == 16:
                         data[key][param_key] = data[key][param_key].cpu().numpy().astype(np.float16).astype(
                             np.float32)
@@ -225,41 +263,62 @@ if __name__ == "__main__":
                         data[key][param_key], kl = conv_Q(data[key][param_key].cpu().numpy(), q)
                         kl_array.append(kl)
                         data[key][param_key] = torch.from_numpy(data[key][param_key])
-                elif ('cnn' in param_key and 'bias' in param_key) or (
-                        'action' in param_key):  # like 'pi_features_extractor.cnn.2.bias'
+                elif 'cnn' in param_key and 'bias' in param_key:  # like 'pi_features_extractor.cnn.2.bias'
+                    '''Numpy version'''
                     if q == 16:
                         data[key][param_key] = data[key][param_key].cpu().numpy().astype(np.float16).astype(
                             np.float32)
                         data[key][param_key] = torch.from_numpy(data[key][param_key])
                     else:
+                        if q == 32:
+                            pass
                         data[key][param_key], kl = Q(data[key][param_key].cpu().numpy(), q)
                         kl_array.append(kl)
                         try:
                             data[key][param_key] = torch.from_numpy(data[key][param_key])
                         except:
                             data[key][param_key] = torch.tensor(data[key][param_key])
-                elif 'weight' in param_key or 'bias' in param_key:
+
+                elif 'weight' in param_key or 'bias' in param_key or 'log_std' in param_key:
+                    '''Numpy version'''
+                    # if q == 16:
+                    #     data[key][param_key] = data[key][param_key].cpu().numpy().astype(np.float16).astype(
+                    #         np.float32)
+                    #     data[key][param_key] = torch.from_numpy(data[key][param_key]).float().dpyte
+                    # else:
+                    #     data[key][param_key], kl = Q(data[key][param_key].cpu().numpy(), q)
+                    #     kl_array.append(kl)
+                    #     try:
+                    #         data[key][param_key] = torch.from_numpy(data[key][param_key]).float().dpyte
+                    #     except:
+                    #         data[key][param_key] = torch.tensor(data[key][param_key]).float().dpyte
+                    #     print("data type:", type(data[key][param_key]))
+                    '''Torch version'''
                     if q == 16:
-                        data[key][param_key] = data[key][param_key].cpu().numpy().astype(np.float16).astype(
-                            np.float32)
-                        data[key][param_key] = torch.from_numpy(data[key][param_key])
+                        data[key][param_key] = data[key][param_key].to(dtype=torch.float16).to(dtype=torch.float32)
+                    elif q == 32:  # the default data type of the pytorch system is 32-bit floating-point
+                        pass
                     else:
-                        data[key][param_key], kl = Q(data[key][param_key].cpu().numpy(), q)
+                        data[key][param_key], kl = Q1(data[key][param_key], q)
                         kl_array.append(kl)
-                        try:
-                            data[key][param_key] = torch.from_numpy(data[key][param_key])
-                        except:
-                            data[key][param_key] = torch.tensor(data[key][param_key])
-                        print("data type:", type(data[key][param_key]))
+
     if "logs/" in args.folder:
         save_path = 'quantized/{}/{}/{}'.format(q, algo,
-                                            f"{env_name}_lr{lr}_rho{rho}_lambda{lambda_hero}_{optimize_choice}_" +
-                                            args.folder.split('_')[-1])
+                                                f"{env_name}_lr{lr}_rho{rho}_lambda{lambda_hero}_{optimize_choice}_" +
+                                                args.folder.split('_')[-1])
     else:
-        save_path = 'quantized/{}/{}/{}'.format(q, algo, f"{env_name}_{exp_id+1}")
+        save_path = 'quantized/{}/{}/{}'.format(q, algo, f"{env_name}_{exp_id + 1}")
+    model.set_parameters(data)
+
     os.makedirs(save_path, exist_ok=True)
-    model.policy.load_state_dict(data['policy'])
     model.save(save_path + '/{}.zip'.format(env_name))
+    # print(model_path + f'{env_name}', "!!!!!!!", save_path + '/{}.zip'.format(env_name) + f'{env_name}')
+    model_path = model_path.replace('.zip', '')
+    model_path1 = save_path + '/{}.zip'.format(env_name)
+    model_path1 = model_path1.replace('.zip', '')
+    if not os.path.exists(model_path1):
+        shutil.copytree(model_path, model_path1)
 
     print("model has successfully saved to {}".format(save_path + '/{}.zip'.format(env_name)))
+    print("################################## END #######################################")
     # print("Kl divergence: ", sum(kl_array))

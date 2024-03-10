@@ -333,7 +333,7 @@ def collate() -> None:  # noqa: C901
         except KeyboardInterrupt:
             pass
         # evaluate the policy
-        mean_reward, std_reward = evaluate_policy(model, env, n_eval_episodes=10, render=False)
+        mean_reward, std_reward = evaluate_policy(model, env, n_eval_episodes=5, render=False)
         print("mean_reward:", mean_reward, "std_reward:", std_reward)
 
         if args.verbose > 0 and len(successes) > 0:

@@ -62,7 +62,7 @@ pip install -e .
 ```sh
 python enjoy.py --algo a2c --env Pendulum-v1 --quantized 32 -f logs/a2c/Pendulum-v1_32bit_lr0.05_rho0.01_lambda1.0_HERO_1
 ```
-2. to check quantized effect of trained model(visualize the simulation environment),just change quantized directory like quantized/8/, quantized/16/
+2. to check quantized effect of trained model(visualize the simulation environment), just change quantized directory like quantized/8/, quantized/16/
 ```sh
 python enjoy.py --algo a2c --env MountainCarContinuous-v0 --quantized 32 -f quantized/8/a2c/MountainCarContinuous-v0_lrSuggestedLR_rho0.05_lambda1.0_base_1
 ```
@@ -92,15 +92,16 @@ python enjoy.py --algo a2c --env MountainCarContinuous-v0 --quantized 32 -f quan
 1. if you want to use default learning rate provided by rl_baseline3_zoo(SuggestedLR), please pass learning rate(the sixth parameter) = 0, for example, "ptq_all.sh a2c MountainCarContinuous-v0  logs/a2c/MountainCarContinuous-v0_32bit_lrSuggestedLR_rho0.05_lambda1.0_base_1 base 1 0.05 0 1.0"<br/><br/>
 2. if you want to use optimizer "base", you can just set optmize_choice to "base", rho and lambda won't influence its training(pass rho and lambda just for grouping in W&B)
 ```sh
-ptq_all.sh a2c logs/a2c/CartPole-v1_32bit_lr0.01_rho0.05_lambda1.0_HERO_1 HERO 1 0.05 0.01 1.0
+ptq_all.sh a2c CartPole-v1 logs/a2c/CartPole-v1_32bit_lr0.01_rho0.05_lambda1.0_HERO_1 HERO 1 0.05 0.01 1.0
 # optional parameter:
 #1. algo 
-#2. the directory of trained model
-#3. optimize choice, like HERO, SAM or base
-#4. seeds, from 1 to 4
-#5. rho
-#6. learning rate
-#7. lambda_hero
+#2. env
+#3. the directory of trained model
+#4. optimize choice, like HERO, SAM or base
+#5. seeds, from 1 to 4
+#6. rho
+#7. learning rate
+#8. lambda_hero
 ```
 
 

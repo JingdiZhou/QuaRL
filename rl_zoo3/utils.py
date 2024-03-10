@@ -409,7 +409,6 @@ def get_latest_run_id_new(log_path: str, env_name: EnvironmentName, quantized: i
     :return: latest run number
     """
     max_run_id = 0
-    print("@@@@@@@@@@@@@@@@@address", os.getcwd())
     for path in glob.glob(os.path.join(log_path,
                                        env_name + f"_{quantized}bit_lr{hyperparams}_rho{rho}_lambda{lambda_hero}_{optimize_choice}_[0-9]*")):
         run_id = path.split("_")[-1]
