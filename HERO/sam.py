@@ -19,7 +19,7 @@ class SAM(torch.optim.Optimizer):
 
             for p in group["params"]:
                 if p.grad is None: continue
-                self.state[p]["old_p"] = p.data.clone()
+                self.state[p]["old_p"] = p.data.clone()  # self.state: save some middle variables in the update process
                 e_w = (torch.pow(p, 2) if group["adaptive"] else 1.0) * p.grad * scale.to(p)
                 p.data = p.data+e_w  # climb to the local maximum "w + e(w)"
                 #self.state[p]["e_w"] = e_w

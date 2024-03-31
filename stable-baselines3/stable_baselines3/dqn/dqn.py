@@ -1,4 +1,5 @@
 import warnings
+from types import NoneType
 from typing import Any, ClassVar, Dict, List, Optional, Tuple, Type, TypeVar, Union
 
 import numpy as np
@@ -230,34 +231,45 @@ class DQN(OffPolicyAlgorithm):
                                             momentum=momentum, weight_decay=weight_decay)
                 loss = F.smooth_l1_loss(current_q_values, target_q_values)
                 loss.backward(retain_graph=True)
-                # th.nn.utils.clip_grad_norm_(self.policy.parameters(), self.max_grad_norm)
+                th.nn.utils.clip_grad_norm_(self.policy.parameters(), self.max_grad_norm)
                 loss_grads = []
 
                 for index_param, param in enumerate(self.policy.parameters()):
+                    if isinstance(param.grad, NoneType):
+                        continue
                     loss_grads.append(param.grad.data.clone().detach())
 
                 self.policy.optimizer.first_step(zero_grad=True)
 
                 # second forward-backward step
+                # Get current new Q-values estimates
                 current_q_values_new = self.q_net(replay_data.observations)
+                # Retrieve the new q-values for the actions from the replay buffer
+                current_q_values_new = th.gather(current_q_values_new, dim=1, index=replay_data.actions.long())
                 loss_new = F.smooth_l1_loss(current_q_values_new, target_q_values)
                 criterion_hero = th.nn.MSELoss()
                 hero_loss = 0.
                 loss_grads_new = th.autograd.grad(loss_new, self.policy.parameters(), retain_graph=True,
-                                                  create_graph=True)
+                                                  create_graph=True, allow_unused=True)
                 loss_grads_copy = []
                 for index, grad in enumerate(loss_grads_new):
+                    if isinstance(grad, NoneType):
+                        continue
                     loss_grads_copy.append(grad.data.clone().detach())
 
                 # compute the Hessian-related loss
                 for index_param, (name, param) in enumerate(self.policy.named_parameters()):
-                    if 'bias' not in name and 'bn' not in name:
+                    # if 'bias' not in name and 'bn' not in name:
+                    if 'q_net_target' not in name and 'bias' not in name:
                         for index, (grad, grad_copy) in enumerate(zip(loss_grads, loss_grads_new)):
                             if index_param == index:
                                 if grad != None and grad_copy != None:
                                     hero_loss += self.lambda_hero * criterion_hero(grad_copy, grad)
                 hero_loss.backward()
+                th.nn.utils.clip_grad_norm_(self.policy.parameters(), self.max_grad_norm)
                 for index_param, (param, grad) in enumerate(zip(self.policy.parameters(), loss_grads_copy)):
+                    if isinstance(grad, NoneType):
+                        continue
                     param.grad += grad
                 self.policy.optimizer.second_step(zero_grad=True)
 
@@ -284,7 +296,7 @@ class DQN(OffPolicyAlgorithm):
                 # th.nn.utils.clip_grad_norm_(self.policy.parameters(), self.max_grad_norm)
                 self.policy.optimizer.second_step(zero_grad=True)
 
-            else:  # base(vanilia)
+            else:  # base(vanilla)
                 # original backpropagation (originate from stable baselines3)
                 # Compute Huber loss (less sensitive to outliers)S
                 loss = F.smooth_l1_loss(current_q_values, target_q_values)

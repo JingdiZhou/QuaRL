@@ -19,6 +19,7 @@ hub
 *.mp4
 *.json
 _build/
+quantized/
 
 tests/dummy_env/build/
 
